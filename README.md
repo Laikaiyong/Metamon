@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# MAMMO AMITUOFO
 
-## Getting Started
+https://encodeclub.notion.site/mammothon-project-ideas
 
-First, run the development server:
+Onchain Tamagotchi
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+ArguArguMon
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+https://www.youtube.com/watch?v=BCl-89ob120
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## **Project Concept**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+A fully onchain virtual pet game that brings the nostalgic 90s Tamagotchi experience to Web3, where each pet is a unique digital entity living entirely on the blockchain.
 
-## Learn More
+## **Core Features**
 
-To learn more about Next.js, take a look at the following resources:
+- Pets exist as autonomous agents using World Engine's entity component system
+- Pet states and actions are fully verifiable onchain
+- Each pet has unique DNA/traits that influence behavior
+- Pets require care (feeding, playing, cleaning) to stay healthy
+- Real-time aging and evolution system
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## **Business Model**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Egg Gacha**
 
-## Deploy on Vercel
+- Users pay to obtain an egg that will hatch into their virtual pet with a gacha-like system
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Virtual Items**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Food tokens
+- Toys and accessories
+- Medicine and care items
+- Premium environments/habitats
+
+**Breeding System**
+
+- Fee for breeding two pets
+- Marketplace royalties from pet trading
+
+## **Tech Stack**
+
+**Onchain Game Logic**
+
+- **World Engine** (https://world.dev/quickstart)
+
+**Frontend Options**
+
+You can use World Engine’s Nakama integration to easily integrate your game client built using your favorite framework or engine – https://world.dev/client/introduction
+
+1. **Unity + Web3 SDK**
+    1. **Rich graphics and animations**
+    2. **Cross-platform support**
+    3. **WebGL export for browser play**
+2. **React**
+    1. **Recommended for web devs**
+    2. **Responsive design**
