@@ -1,10 +1,6 @@
-# MAMMO AMITUOFO
+# Metamon
 
 https://encodeclub.notion.site/mammothon-project-ideas
-
-Onchain Tamagotchi
-
-ArguArguMon
 
 https://www.youtube.com/watch?v=BCl-89ob120
 

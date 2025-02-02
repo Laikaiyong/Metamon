@@ -4,48 +4,34 @@ import (
 	"fmt"
 
 	"pkg.world.dev/world-engine/cardinal"
-	"pkg.world.dev/world-engine/cardinal/filter"
 	"pkg.world.dev/world-engine/cardinal/types"
 
 	comp "metamon/component"
 )
 
-// queryTargetPlayer queries for the target player's entity ID and health component.
-func queryTargetPlayer(world cardinal.WorldContext, targetNickname string) (types.EntityID, *comp.Health, error) {
-	var playerID types.EntityID
-	var playerHealth *comp.Health
-	var err error
-	searchErr := cardinal.NewSearch().Entity(
-		filter.Exact(filter.Component[comp.Player](), filter.Component[comp.Health]())).Each(world,
-		func(id types.EntityID) bool {
-			var player *comp.Player
-			player, err = cardinal.GetComponent[comp.Player](world, id)
-			if err != nil {
-				return false
-			}
-
-			// Terminates the search if the player is found
-			if player.Nickname == targetNickname {
-				playerID = id
-				playerHealth, err = cardinal.GetComponent[comp.Health](world, id)
-				if err != nil {
-					return false
-				}
-				return false
-			}
-
-			// Continue searching if the player is not the target player
-			return true
-		})
-	if searchErr != nil {
-		return 0, nil, err
-	}
+func queryPet(world cardinal.WorldContext, petID types.EntityID) (*comp.Pet, error) {
+	pet, err := cardinal.GetComponent[comp.Pet](world, petID)
 	if err != nil {
-		return 0, nil, err
+		return nil, fmt.Errorf("failed to get pet: %v", err)
 	}
-	if playerHealth == nil {
-		return 0, nil, fmt.Errorf("player %q does not exist", targetNickname)
-	}
+	return pet, nil
+}
 
-	return playerID, playerHealth, err
+func queryEgg(world cardinal.WorldContext, eggID types.EntityID) (*comp.Egg, error) {
+	egg, err := cardinal.GetComponent[comp.Egg](world, eggID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get egg: %v", err)
+	}
+	return egg, nil
+}
+
+func verifyPetOwner(world cardinal.WorldContext, petID types.EntityID, owner string) error {
+	pet, err := queryPet(world, petID)
+	if err != nil {
+		return err
+	}
+	if pet.Owner.Address != owner {
+		return fmt.Errorf("not pet owner")
+	}
+	return nil
 }

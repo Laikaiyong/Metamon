@@ -27,40 +27,44 @@ func main() {
 // function so that this can be used directly in tests.
 func MustInitWorld(w *cardinal.World) {
 	// Register components
-	// NOTE: You must register your components here for it to be accessible.
 	Must(
-		cardinal.RegisterComponent[component.Player](w),
-		cardinal.RegisterComponent[component.Health](w),
+		cardinal.RegisterComponent[component.Pet](w),
+		cardinal.RegisterComponent[component.Owner](w),
+		cardinal.RegisterComponent[component.Egg](w),
 	)
 
-	// Register messages (user action)
-	// NOTE: You must register your transactions here for it to be executed.
+	// Register messages
 	Must(
-		cardinal.RegisterMessage[msg.CreatePlayerMsg, msg.CreatePlayerResult](w, "create-player"),
-		cardinal.RegisterMessage[msg.AttackPlayerMsg, msg.AttackPlayerMsgReply](w, "attack-player"),
+		cardinal.RegisterMessage[msg.CreateOwnerMsg, msg.CreateOwnerResult](w, "create-owner"),
+		cardinal.RegisterMessage[msg.CarePetMsg, msg.CarePetResult](w, "care-pet"),
+		cardinal.RegisterMessage[msg.EvolveMsg, msg.EvolveResult](w, "evolve-pet"),
+		cardinal.RegisterMessage[msg.CreateEggMsg, msg.CreateEggResult](w, "create-egg"),
+		cardinal.RegisterMessage[msg.HatchEggMsg, msg.HatchEggResult](w, "hatch-egg"),
 	)
 
 	// Register queries
-	// NOTE: You must register your queries here for it to be accessible.
 	Must(
-		cardinal.RegisterQuery[query.PlayerHealthRequest, query.PlayerHealthResponse](w, "player-health", query.PlayerHealth),
+		cardinal.RegisterQuery[query.PetInfoRequest, query.PetInfoResponse](w, "pet-info", query.PetInfo),
+		cardinal.RegisterQuery[query.OwnerRequest, query.OwnerResponse](w, "owner-info", query.QueryOwner),
+		cardinal.RegisterQuery[query.OwnerPetsRequest, query.OwnerPetsResponse](w, "owner-pets", query.OwnerPets),
 	)
 
-	// Each system executes deterministically in the order they are added.
-	// This is a neat feature that can be strategically used for systems that depends on the order of execution.
-	// For example, you may want to run the attack system before the regen system
-	// so that the player's HP is subtracted (and player killed if it reaches 0) before HP is regenerated.
+	// Register systems
 	Must(cardinal.RegisterSystems(w,
-		system.AttackSystem,
-		system.RegenSystem,
-		system.PlayerSpawnerSystem,
+		system.GachaSystem,
+		system.GachaSpawnerSystem,
+		system.HatchGachaSystem,
+		system.OwnerSystem,
+		system.OwnerSpawnerSystem,
+		system.PetLifecycleSystem,
+		system.EvolutionSystem,
+		system.PetCareSystem,
 	))
 
-	Must(cardinal.RegisterInitSystems(w,
-		system.SpawnDefaultPlayersSystem,
-	))
+	// Must(cardinal.RegisterInitSystems(w,
+	//     system.SpawnDefaultPlayersSystem,
+	// ))
 }
-
 func Must(err ...error) {
 	e := errors.Join(err...)
 	if e != nil {
