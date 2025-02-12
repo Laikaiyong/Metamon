@@ -69,7 +69,7 @@ export default function Home() {
               onClick={disconnectMetaMask}
               className="w-4/5 bg-[#e63946] text-white font-bold py-2 rounded mt-4 hover:bg-[#d62828] transition"
             >
-              Disconnect
+              Disconnect Metamask
             </button>
           )}
         </div>
