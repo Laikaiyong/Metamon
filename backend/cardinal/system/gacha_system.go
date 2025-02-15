@@ -22,7 +22,7 @@ type GachaPool struct {
 var GachaPools = map[string]GachaPool{
 	"common": {
 		Tier:    "common",
-		Species: []string{"cat", "dog", "rabbit"},
+		Species: []string{"neko", "dog", "rabbit"},
 		BaseStats: comp.Stats{
 			Strength:     5,
 			Intelligence: 5,
@@ -41,6 +41,28 @@ var GachaPools = map[string]GachaPool{
 			Charm:        10,
 		},
 		RateBonus: 1.5,
+	},
+	"epic": {
+		Tier:    "epic",
+		Species: []string{"dragon", "griffin", "phoenix"},
+		BaseStats: comp.Stats{
+			Strength:     15,
+			Intelligence: 15,
+			Agility:      15,
+			Charm:        15,
+		},
+		RateBonus: 2.0,
+	},
+	"legendary": {
+		Tier:    "legendary",
+		Species: []string{"unicorn", "golem", "kitsune"},
+		BaseStats: comp.Stats{
+			Strength:     20,
+			Intelligence: 20,
+			Agility:      20,
+			Charm:        20,
+		},
+		RateBonus: 2.5,
 	},
 }
 

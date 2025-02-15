@@ -4,18 +4,68 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --foreground: #1C1C1C;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+
+}
+
+.kawaii-pattern {
+  background: linear-gradient(135deg, #FFF6F6 25%, transparent 25%) -12px 0,
+              linear-gradient(225deg, #FFF6F6 25%, transparent 25%) -12px 0,
+              linear-gradient(315deg, #FFF6F6 25%, transparent 25%),
+              linear-gradient(45deg, #FFF6F6 25%, transparent 25%);
+  background-size: 24px 24px;
+  background-color: #FFE5E5;
+  box-shadow: 
+    0 0 30px rgba(255, 170, 165, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.game-screen-frame {
+  background: linear-gradient(45deg, #A8E6CF, #A8D8EA);
+  border: 8px solid #FFE5E5;
+  box-shadow: 
+    inset 0 0 20px rgba(255, 255, 255, 0.5),
+    0 0 15px rgba(168, 230, 207, 0.4);
+}
+
+.screen-background {
+  background: linear-gradient(to bottom right, #AA96DA, #A8D8EA);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.screen-stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 40px 70px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 50px 160px, #ffffff, rgba(0,0,0,0));
+  background-size: 200px 200px;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.kawaii-text-shadow {
+  text-shadow: 
+    4px 4px 0 #FFB5B5,
+    -4px -4px 0 #FFB5B5,
+    4px -4px 0 #FFB5B5,
+    -4px 4px 0 #FFB5B5,
+    0 0 10px rgba(255, 170, 165, 0.8),
+    0 0 20px rgba(255, 170, 165, 0.6),
+    0 0 30px rgba(255, 170, 165, 0.4),
+    2px 2px 2px rgba(0, 0, 0, 0.5);
+  animation: glow 5s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
 }

@@ -26,9 +26,8 @@ const (
 
 var EvolutionThresholds = map[uint8]uint32{
 	1: 1000,
-	2: 3000,
-	3: 6000,
-	4: 10000,
+	2: 6000,
+	3: 10000,
 }
 
 func CheckEvolution(world cardinal.WorldContext, message msg.EvolveMsg) (msg.EvolveResult, error) {

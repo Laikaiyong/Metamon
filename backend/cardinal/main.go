@@ -35,18 +35,18 @@ func MustInitWorld(w *cardinal.World) {
 
 	// Register messages
 	Must(
-		cardinal.RegisterMessage[msg.CreateOwnerMsg, msg.CreateOwnerResult](w, "create-owner"),
-		cardinal.RegisterMessage[msg.CarePetMsg, msg.CarePetResult](w, "care-pet"),
-		cardinal.RegisterMessage[msg.EvolveMsg, msg.EvolveResult](w, "evolve-pet"),
-		cardinal.RegisterMessage[msg.CreateEggMsg, msg.CreateEggResult](w, "create-egg"),
-		cardinal.RegisterMessage[msg.HatchEggMsg, msg.HatchEggResult](w, "hatch-egg"),
+		cardinal.RegisterMessage[msg.CreateOwnerMsg, msg.CreateOwnerResult](w, "createowner"),
+		cardinal.RegisterMessage[msg.CarePetMsg, msg.CarePetResult](w, "carepet"),
+		cardinal.RegisterMessage[msg.EvolveMsg, msg.EvolveResult](w, "evolvepet"),
+		cardinal.RegisterMessage[msg.CreateEggMsg, msg.CreateEggResult](w, "createegg"),
+		cardinal.RegisterMessage[msg.HatchEggMsg, msg.HatchEggResult](w, "hatchegg"),
 	)
 
 	// Register queries
 	Must(
-		cardinal.RegisterQuery[query.PetInfoRequest, query.PetInfoResponse](w, "pet-info", query.PetInfo),
-		cardinal.RegisterQuery[query.OwnerRequest, query.OwnerResponse](w, "owner-info", query.QueryOwner),
-		cardinal.RegisterQuery[query.OwnerPetsRequest, query.OwnerPetsResponse](w, "owner-pets", query.OwnerPets),
+		cardinal.RegisterQuery[query.PetInfoRequest, query.PetInfoResponse](w, "petinfo", query.PetInfo),
+		cardinal.RegisterQuery[query.OwnerRequest, query.OwnerResponse](w, "ownerinfo", query.QueryOwner),
+		cardinal.RegisterQuery[query.OwnerPetsRequest, query.OwnerPetsResponse](w, "ownerpets", query.OwnerPets),
 	)
 
 	// Register systems
