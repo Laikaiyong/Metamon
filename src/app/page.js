@@ -1,101 +1,79 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [account, setAccount] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const connectToMetaMask = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAccount(accounts[0]);
+        console.log(' Connected to MetaMask: ', accounts[0]);
+      } catch (error) {
+        console.error('Failed to connect to MetaMask', error);
+      }
+    } else {
+      alert('MetaMask is not installed. Please install it to use this feature.');
+    }
+  };
+
+  const disconnectMetaMask = async () => {
+    setAccount(null);
+    console.log('Disconnected from MetaMask');
+    if (window.ethereum) {
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+      } catch (error) {
+        console.error('Failed to trigger MetaMask explorer', error);
+      }
+    }
+  };
+
+  const truncateAddress = (address) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  return (
+    <div
+      className="flex flex-col items-center justify-center min-h-screen p-8"
+      style={{ backgroundImage: "url('/MetamonBackground.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
+      {/* Gaming Fonts Link */}
+      <div className="mt-4">
+        <a href="https://www.fontspace.com/category/gaming">
+          <img src="https://see.fontimg.com/api/rf5/m2L8j/MzU2NTYxMDkxZDY4NDY4N2E1YTUyOTRhZjgzZWFiZGMudHRm/TWV0YW1vbg/super-pixel.png?r=fs&h=81&w=1250&fg=000000&bg=FFFFFF&tb=1&s=65" alt="Gaming fonts" />
+        </a>
+      </div>
+
+      {/* Login Section */}
+      <div className="mt-8 p-6 bg-[#eadccf] rounded-lg shadow-lg max-w-md w-full text-white text-center border border-[#415a77] flex flex-col items-center">
+        {/* GIF Image */}
+        <div className="w-32 mb-4">
+          <img src="/gif.gif" alt="Animated GIF" className="w-full rounded-lg shadow-lg" />
+        </div>  
+        
+        {/* Button Section (Centered) */}
+        <div className="w-full flex flex-col items-center">
+          <button
+            onClick={connectToMetaMask}
+            className="w-4/5 bg-[#8c7951] text-white font-bold py-2 rounded mt-4 hover:bg-[#9a6b54] transition"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {account ? `Connected: ${truncateAddress(account)}` : 'Connect to MetaMask'}
+          </button>
+
+          {account && (
+            <button
+              onClick={disconnectMetaMask}
+              className="w-4/5 bg-[#e63946] text-white font-bold py-2 rounded mt-4 hover:bg-[#d62828] transition"
+            >
+              Disconnect Metamask
+            </button>
+          )}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
