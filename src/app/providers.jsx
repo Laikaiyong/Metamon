@@ -16,7 +16,6 @@ export function Providers({ children }) {
             "defaultkey",           // API key
             "localhost",           // host
             "7350",               // port
-            false                 // use SSL
         );
 
         setClient(nakamaClient);

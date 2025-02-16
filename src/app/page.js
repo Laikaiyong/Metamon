@@ -19,6 +19,7 @@ export default function Home() {
   const router = useRouter();
 
   const connectToMetaMask = async () => {
+    authenticate();
     if (window.ethereum) {
       try {
         const accounts = await window.ethereum.request({
@@ -28,6 +29,11 @@ export default function Home() {
         console.log("Connected to MetaMask:", accounts[0]);
 
         // Show modal after successful connection
+        const existingOwnerData = localStorage.getItem("ownerData");
+        if (existingOwnerData) {
+          router.push("/dashboard");
+          return;
+        }
         setShowModal(true);
       } catch (error) {
         console.error("Failed to connect to MetaMask", error);
@@ -48,15 +54,39 @@ export default function Home() {
   const truncateAddress = (address) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
+  async function createPersona() {
+    try {
+      const payload = {
+        personaTag: nickname,
+        storage: {
+          metadata: {},
+          version: 1
+        }
+      };
+
+      const rpcResponse = await client.rpc(
+        session,
+        "nakama/claim-persona",
+        payload
+      );
+      console.log("Persona created:", rpcResponse);
+      setPersona(rpcResponse);
+      return rpcResponse;
+    } catch (error) {
+      console.error("Failed to create persona:", error);
+      throw error;
+    }
+  }
 
   const authenticate = async () => {
+    // No need to create client here since it's already provided via useNakama hook
+
     try {
       let deviceId = localStorage.getItem("deviceId");
       if (!deviceId) {
         deviceId = uuidv4();
         localStorage.setItem("deviceId", deviceId);
       }
-
       const newSession = await client.authenticateDevice(deviceId, true);
       setSession(newSession);
       localStorage.setItem("user_id", newSession.user_id);
@@ -67,6 +97,18 @@ export default function Home() {
       setSocket(newSocket);
 
       return newSession;
+      // } else {
+        //   const session = await client.authenticateDevice(deviceId, true);
+      //   setSession(session);
+      //   localStorage.setItem("user_id", session.user_id);
+      //   const oldSession = await client.linkDevice(session, deviceId);
+
+      //   const trace = false;
+      //   const newSocket = client.createSocket(false, trace);
+      //   await newSocket.connect(oldSession);
+      //   setSocket(newSocket);
+
+      //   return oldSession;
     } catch (error) {
       console.error("Authentication failed:", error);
       throw error;
@@ -74,72 +116,74 @@ export default function Home() {
   };
 
   const createOwner = async () => {
+    // let deviceId = localStorage.getItem("deviceId");
+    // // if (!deviceId) {
+    //   await createPersona();
+    // // }
+    console.log("Starting createOwner function");
+
     if (!nickname.trim()) {
+      console.log("Nickname validation failed - empty nickname");
       alert("Please enter a nickname.");
       return;
     }
 
+    console.log("Nickname validation passed:", nickname);
     setIsLoading(true);
+    console.log("Loading state set to true");
+
     try {
       // Create request payload
       const requestPayload = {
-        personaTag: persona,
+        personaTag: nickname,
         namespace: "metamon",
         timestamp: Date.now(),
         signature: account, // Using wallet address as signature
-        body: {
-          nickname: nickname,
-          address: account,
-          persona_type: persona,
-        },
+        nickname: nickname,
+        address: account,
+        persona_type: persona,
       };
 
       console.log("Request Payload:", requestPayload);
+      console.log("Current session:", session);
 
       // API call options
-      const options = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.token}`, // Add if session token is needed
-        },
-        body: JSON.stringify(requestPayload),
-      };
 
-      console.log(
-        "Sending request to:",
-        "http://localhost:4040/tx/game/createowner"
+      console.log("Making RPC call to tx/game/createowner");
+      const response = await client.rpc(
+        session,
+        `tx/game/createowner`,
+        requestPayload
       );
+      console.log("Raw RPC response:", response);
 
-      const response = await fetch(
-        "http://localhost:4040/tx/game/createowner",
-        options
-      );
-      const data = await response.json();
-
-      console.log("API Response:", data);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create owner");
+      if (!response.payload) {
+        console.log("Empty response payload");
+        throw new Error("Empty response from server");
       }
+
+      console.log("API Response payload:", response.payload);
 
       // Save to localStorage
       const storageData = {
-        ...requestPayload.body,
+        ...requestPayload,
         created_at: new Date().toISOString(),
       };
+      console.log("Data to be saved in localStorage:", storageData);
       localStorage.setItem("ownerData", JSON.stringify(storageData));
-      console.log("Data saved to localStorage");
+      console.log("Data successfully saved to localStorage");
 
-      console.log("Owner created successfully!");
+      console.log("Owner created successfully! Redirecting to dashboard...");
       router.push("/dashboard");
     } catch (error) {
       console.error("Create Owner Error:", {
         message: error.message,
+        stack: error.stack,
         timestamp: new Date().toISOString(),
       });
       alert("Failed to create owner. Please try again.");
     } finally {
+      console.log("Setting loading state back to false");
       setIsLoading(false);
     }
   };
@@ -147,7 +191,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA]">
       {/* Background Image Layer */}
-      <div className="fixed inset-0 z-0">
+      {/* <div className="fixed inset-0 z-0">
         <Image
           src="https://64.media.tumblr.com/2a147549f69f13da935aec570f2c2c1e/91cbac430d1b6d34-e0/s400x600/48c771b5a32f873b165b64aafea8ea613c5e9ff9.png"
           alt="Fantasy Background"
@@ -156,7 +200,7 @@ export default function Home() {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[rgba(0,0,0,0.4)]"></div>
-      </div>
+      </div> */}
 
       {/* Title Section */}
       <div className="pixel-container relative mb-8">

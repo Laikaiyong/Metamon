@@ -36,6 +36,7 @@ func MustInitWorld(w *cardinal.World) {
 	// Register messages
 	Must(
 		cardinal.RegisterMessage[msg.CreateOwnerMsg, msg.CreateOwnerResult](w, "createowner"),
+		cardinal.RegisterMessage[msg.GetOwnerMsg, msg.GetOwnerResult](w, "getowner"),
 		cardinal.RegisterMessage[msg.CarePetMsg, msg.CarePetResult](w, "carepet"),
 		cardinal.RegisterMessage[msg.EvolveMsg, msg.EvolveResult](w, "evolvepet"),
 		cardinal.RegisterMessage[msg.CreateEggMsg, msg.CreateEggResult](w, "createegg"),
@@ -56,6 +57,7 @@ func MustInitWorld(w *cardinal.World) {
 		system.HatchGachaSystem,
 		system.OwnerSystem,
 		system.OwnerSpawnerSystem,
+		system.OwnerGetterSystem,
 		system.PetLifecycleSystem,
 		system.EvolutionSystem,
 		system.PetCareSystem,
