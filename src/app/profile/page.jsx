@@ -1,55 +1,70 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 export default function ProfilePage() {
-    return (
-        <main className="grid grid-cols-2 items-center justify-center px-10 py-10">
-            {/* Left Side */}
-            <div className="flex flex-col min-h-screen">
-                <div className="border border-[#1C1C1C] rounded-[16px] h-[600px] flex flex-col items-center space-y-6 px-4">
-                    {/* Card Title */}
-                    <h1 className="text-[32px] w-[90%] rounded-[16px] bg-[#3B3B3B] text-center text-white">METAMON INFO</h1>
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-                    {/* Metamon Image */}
-                    <div className="">
-                        <Image src="/gacha/legendary/kitsune/2.png" alt="Profile Picture" width="200" height="200" className="rounded-full"/>
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % metamon.image.length);
+        }, 3000); // Change image every 3 seconds
+
+        return () => clearInterval(interval); // Cleanup on unmount
+    }, []);
+
+    return (
+        <>
+            <main className="px-[100px] py-[100px]">
+                <div className="nes-container with-title is-centered flex flex-col items-center justify-center p-8 mx-auto max-w-max">
+                    <p className="title">
+                        Metamon Info
+                    </p>
+                    {/* Metamon Image */} 
+                    <div className="relative w-[200px] h-[200px] nes-container">
+                        <Image 
+                            src={metamon.image[currentImageIndex]}
+                            alt="Metamon"
+                            fill
+                            objectFit="contain"
+                        />
                     </div>
-        
-                    {/* Metamon Name */}
-                    <h3 className="text-[20px]">The Ultimate Kitsune</h3>
-                    
-                    {/* Experience Bar */}
-                    <div className="w-full mt-4">
-                        <p className="text-gray-500">EXP: <span className="font-semibold">1200/2000</span></p>
-                        <div className="w-full bg-gray-300 rounded-full h-3">
-                            <div className="bg-[#3B3B3B] h-3 rounded-full" style={{ width: "60%" }}></div>
+                    {/* Metamon Info */}
+                    <div>
+                        <div>
+                            <p>{metamon.name}</p>
+                        </div>
+                        <div className="text-[12px]">
+                            <p>LVL: {metamon.level}</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-center">
+                            {/* Rarity */}
+                            <div className="nes-badge">
+                                <span className="is-primary block">{metamon.rarity}</span>
+                            </div>
+
+                            {/* Allegiance */}
+                            <div className="nes-badge">
+                                <span className="is-dark block">{metamon.allegiance}</span>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Metamon Properties */}
-                    <div>
-
-                    </div>
                 </div>
-
-                <div>
-                    Stats
-                </div>
-            </div>
-            
-            {/* Right Side */}
-            <div className="">
-                <div>
-
-                </div>
-                <div>
-
-                </div>
-                <div>
-
-                </div>
-            </div>
-        </main>
-    );
+            </main>
+        </>
+    )
 }
+
+const metamon = {
+    name: "Ashley the Kitsune",
+    level: 35,
+    rarity: "LEGENDARY",
+    allegiance: "TRICKSTER",
+    image: [
+        "/gacha/legendary/kitsune/1.png",
+        "/gacha/legendary/kitsune/2.png",
+        "/gacha/legendary/kitsune/3.png"
+    ],
+    stats:
+};

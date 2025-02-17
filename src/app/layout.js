@@ -1,11 +1,18 @@
 import "./globals.css";
 import { Providers } from "./providers";
-import { Jersey_10 } from 'next/font/google';
+// import { Jersey_10 } from 'next/font/google';
+import { Press_Start_2P } from "next/font/google";
+import "../../node_modules/nes.css/css/nes.css";
+import "nes.css/css/nes.min.css";
+// const jersey = Jersey_10({
+//   weight: '400',
+//   subsets: ['latin'],
+// });
 
-const jersey = Jersey_10({
+const pressStart2P = Press_Start_2P({
   weight: '400',
   subsets: ['latin'],
-});
+})
 
 export const metadata = {
   title: "Metamon",
@@ -38,7 +45,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <Providers>
       <body
-        className={`${jersey.className} antialiased`}
+        className={`${pressStart2P.className} antialiased`}
       >
         {children}
       </body>
