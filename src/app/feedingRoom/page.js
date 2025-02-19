@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const PlayRoom = () => {
+const FeedingRoom = () => {
   const router = useRouter();
 
   // Metamon Stats
@@ -21,7 +21,7 @@ const PlayRoom = () => {
   const [showPopup, setShowPopup] = useState(false);
 
   // Simulate Playing Action
-  const playWithMetamon = () => {
+  const buyItems = () => {
     setMetamonMood("Excited 🤩");
     setMetamonEnergy((prevEnergy) => Math.max(prevEnergy - 10, 0));
     setMetamonHappiness((prevHappiness) => Math.min(prevHappiness + 10, 100));
@@ -67,11 +67,24 @@ const PlayRoom = () => {
     };
   }, []);
 
+  // Check if Metamon is in the center of the room design
+  const isMetamonInCenter = position.top === 200 && position.left === 450;
+
   return (
     <div className="flex flex-row items-center justify-center min-h-screen p-8 relative" style={{ backgroundColor: "black" }}>
       
       {/* 📜 LEFT SIDE: LIST OF ITEMS */}
       <div className="flex flex-col space-y-4 p-4 bg-gray-900 rounded-lg shadow-lg">
+      <div className="pixel-container relative mt-16 mb-8">
+        <h1 className="font-jersey text-7xl text-center mb-4 kawaii-text-shadow">
+          {["S", "H", "O", "P"].map((letter, i) => (
+            <span key={i} className={`inline-block animate-bounce-${i} text-[#FFAAA5]`}>
+              {letter}
+            </span>
+          ))}
+        </h1>
+        <div className="pixel-decoration"></div>
+      </div>
         <h2 className="text-white text-xl font-bold text-center">🍽️ Food List</h2>
 
         {/* Example Food Items (Update with real images) */}
@@ -107,20 +120,32 @@ const PlayRoom = () => {
         </div>  
 
         {/* 🎾 Play Button */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <button
-            className="bg-[#FFAAA5] text-white px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
-            onClick={playWithMetamon}
-          >
-            Play with Metamon 🎾
-          </button>
-        </div>
+        {isMetamonInCenter && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+            <button
+              className="bg-[#FFAAA5] text-white px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
+              onClick={buyItems}
+            >
+              Shop
+            </button>
+          </div>
+        )}
+        {/* Go to counter to shop for items */}
       </div>
 
       {/* 📌 RIGHT SIDE: NAVIGATION BUTTONS */}
       <div className="flex flex-col space-y-4 p-4 bg-gray-900 rounded-lg shadow-lg">
-        <h2 className="text-white text-xl font-bold text-center">🌍 Rooms</h2>
-
+        {/* <h2 className="text-white text-xl font-bold text-center">🌍 Rooms</h2> */}
+        <div className="pixel-container relative mt-16 mb-8">
+        <h1 className="font-jersey text-7xl text-center mb-4 kawaii-text-shadow">
+          {["R", "O", "O", "M"].map((letter, i) => (
+            <span key={i} className={`inline-block animate-bounce-${i} text-[#FFAAA5]`}>
+              {letter}
+            </span>
+          ))}
+        </h1>
+        <div className="pixel-decoration"></div>
+      </div>
         <button
           className="flex items-center bg-[#A8D8EA] text-white px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform"
           onClick={() => router.push("/feedRoom")}
@@ -150,8 +175,8 @@ const PlayRoom = () => {
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Metamon is Excited!</h2>
-            <p>Metamon is having a great time playing with you!</p>
+            <h2 className="text-2xl font-bold mb-4">Welcome to Metashop!</h2>
+            <p>Metamon is having a great time shopping with you!</p>
             <button
               className="mt-4 bg-[#FFAAA5] text-white px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform"
               onClick={() => setShowPopup(false)}
@@ -165,4 +190,4 @@ const PlayRoom = () => {
   );
 };
 
-export default PlayRoom;
+export default FeedingRoom;

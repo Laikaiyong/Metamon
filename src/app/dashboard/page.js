@@ -385,7 +385,7 @@ const Dashboard = () => {
           {/* Egg Image (Before Hatching) */}
           <div className="relative">
             <Image
-              src="/gacha/egg/1.jpg"
+              src="/gacha/egg/2.png"
               alt="Egg"
               width={150}
               height={150}
@@ -484,6 +484,16 @@ const Dashboard = () => {
                   ⚡ Energy: <b>90/100</b>
                 </p>
               </div>
+
+               {/* See Profile Button */}
+              <div className="ml-auto">
+                <button
+                  className="bg-[#A8D8EA] text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
+                  onClick={() => router.push("/profile")}
+                >
+                  See Profile
+                </button>
+              </div>
             </div>
           </div>
 
@@ -491,7 +501,7 @@ const Dashboard = () => {
           <div className="flex space-x-4 mt-6">
             <button
               className="bg-[#FFAAA5] text-white px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
-              onClick={() => interactWithMetamon("feed")}>
+              onClick={() => router.push("/feedingRoom")}>
               Feed 🍖
             </button>
 
