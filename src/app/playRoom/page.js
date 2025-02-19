@@ -77,7 +77,7 @@ const PlayRoom = () => {
         {/* Metamon Play Area */}
         <div className="flex justify-center items-center mt-6">
           <Image
-            src="/gacha/rare/fox/1.png"
+            src="/gacha/rare/fox/fox1.gif"
             alt="Metamon Playing"
             width={200}
             height={200}
