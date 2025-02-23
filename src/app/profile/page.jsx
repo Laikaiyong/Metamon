@@ -66,5 +66,5 @@ const metamon = {
         "/gacha/legendary/kitsune/2.png",
         "/gacha/legendary/kitsune/3.png"
     ],
-    stats:
+    stats: {}
 };
