@@ -3,172 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useNakama } from "../providers";
-import { v4 as uuidv4 } from "uuid";
 
 const Dashboard = () => {
   const [session, setSession] = useState(null);
-  const [ownerInfo, setOwnerInfo] = useState(null);
   const [socket, setSocket] = useState(null);
   const [persona, setPersona] = useState("_test_persona"); // Default persona
   const [account, setAccount] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [nickname, setNickname] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Call getOwner when component mounts
-     const client = useNakama();
-
-  const truncateAddress = (address) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const authenticate = async () => {
-    try {
-      let deviceId = localStorage.getItem("deviceId");
-      if (!deviceId) {
-        deviceId = uuidv4();
-        localStorage.setItem("deviceId", deviceId);
-        const newSession = await client.authenticateDevice(deviceId, true);
-        setSession(newSession);
-        localStorage.setItem("user_id", newSession.user_id);
-
-        const trace = false;
-        const newSocket = client.createSocket(false, trace);
-        await newSocket.connect(newSession);
-        setSocket(newSocket);
-
-        return newSession;
-      } else {
-        const session = await client.authenticateDevice(deviceId, true);
-        setSession(session);
-        localStorage.setItem("user_id", session.user_id);
-        const oldSession = await client.linkDevice(session, deviceId);
-        setSession(oldSession);
-
-        const trace = false;
-        const newSocket = client.createSocket(false, trace);
-        await newSocket.connect(oldSession);
-        setSocket(newSocket);
-
-        return oldSession;
-      }
-    } catch (error) {
-      console.error("Authentication failed:", error);
-      throw error;
-    }
-  };
-
-  const getOwner = async () => {
-    try {
-      // Check for valid session
-      if (!session) {
-        console.log("No active session, authenticating...");
-        const newSession = await authenticate();
-        setSession(newSession);
-        console.log("New session created:", newSession);
-      }
-
-      // Check if session needs refresh
-      if (session?.refresh_token && session.isexpired()) {
-        console.log("Session expired, refreshing...");
-        const refreshedSession = await client.sessionRefresh(
-          session.refresh_token
-        );
-        setSession(refreshedSession);
-        console.log("Session refreshed:", refreshedSession);
-      }
-
-      const ownerData = JSON.parse(localStorage.getItem("ownerData"));
-      if (!ownerData || !ownerData.address) {
-        throw new Error("No owner data found");
-      }
-      console.log("Owner data from localStorage:", ownerData);
-
-      const requestPayload = {
-        personaTag: ownerData.nickname,
-        address: ownerData.address,
-      };
-
-      console.log("Request Payload:", requestPayload);
-      console.log("Current session:", session);
-
-      const response = await client.rpc(
-        session,
-        `tx/game/getowner`,
-        requestPayload
-      );
-      console.log("Raw RPC response:", response);
-
-      if (!response.payload) {
-        throw new Error("Empty response from server");
-      }
-
-      setOwnerInfo(response.payload);
-    } catch (error) {
-      console.error("Get Owner Error:", {
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      });
-      setOwnerInfo(null);
-
-      // Handle session errors
-      if (error.message.includes("refresh_token")) {
-        console.log("Session invalid, re-authenticating...");
-        await authenticate();
-      }
-    }
-  };
-  
-
-  
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-      if (client) {
-          setIsReady(true);
-          authenticate();
-          getOwner();
-        }
-      }, [client]);
-      
-      // authenticate();
-      // getOwner();
-      const createNewEgg = async () => {
-    try {
-      const owner = JSON.parse(localStorage.getItem("ownerData"));
-      let requestPayload = {
-        owner: owner.address,
-      };
-      const options = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.token}`, // Add if session token is needed
-        },
-        body: JSON.stringify(requestPayload),
-      };
-
-      const response = await fetch(
-        "http://localhost:4040/tx/game/createegg",
-        options
-      );
-      const data = await response.json();
-      console.log(data);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create new egg");
-      }
-
-      setNewEgg(data);
-      alert("New egg created successfully!");
-    } catch (error) {
-      console.error("Create New Egg Error:", error);
-      alert("Failed to create new egg. Please try again.");
-    }
-  };
-
-  const [selectedAction, setSelectedAction] = useState(null);
   const [playerProfile, setPlayerProfile] = useState({
     address: "0xA3bC...123F", // Example blockchain address
     nickname: "Metamon",
@@ -176,6 +18,10 @@ const Dashboard = () => {
     petCount: 5,
     lastPetTime: new Date(1704067200000).toLocaleString(), // Last pet interaction timestamp
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedAction, setSelectedAction] = useState(null);
+
+  const [isReady, setIsReady] = useState(false);
   // Define Gacha Evolution Data (Categorized)
   const gachaEvolution = {
     common: [
@@ -272,6 +118,94 @@ const Dashboard = () => {
     ],
   };
 
+  const [pets, setPets] = useState([]);
+
+  const loadPets = async () => {
+      try {
+          const ownerData = JSON.parse(localStorage.getItem("ownerData"));
+          if (!ownerData?.address) return;
+
+          const petIds = await nakama.getOwnerPets(ownerData.address);
+            console.log("Pet IDs:", petIds); // Debug log
+          // setPets(petIds);
+      } catch (error) {
+          console.error("Load Pets Error:", error);
+      }
+  };
+
+
+  const nakama = useNakama();
+
+  const getOwner = async () => {
+    try {
+      const ownerData = JSON.parse(localStorage.getItem("ownerData"));
+      if (!ownerData?.address) {
+        throw new Error("No owner data found");
+      }
+
+      const owner = await nakama.getOwner(ownerData.address);
+
+      console.log(
+        "Owner ", owner
+      )
+      if (owner)
+      {
+        setPlayerProfile({
+          address: owner.address,
+          nickname: owner.nickname,
+          joinedAt: new Date(owner.joined_at * 1000).toLocaleDateString(),
+          petCount: owner.pet_count,
+          lastPetTime: owner.last_pet_time ? new Date(owner.last_pet_time * 1000).toLocaleString() : 'Never'
+        });
+      }
+    } catch (error) {
+      console.error("Get Owner Error:", error);
+      setPlayerProfile(null);
+    }
+  };
+
+  const createNewEgg = async () => {
+    try {
+      setIsLoading(true);
+      await nakama.authenticate();
+      const owner = JSON.parse(localStorage.getItem("ownerData"));
+      const tier = Math.floor(Math.random() * 4) + 1;
+      const tierToCategory = {
+        1: 'common',
+        2: 'rare', 
+        3: 'epic',
+        4: 'legendary'
+      };
+      const category = tierToCategory[tier];
+      const response = await nakama.createEgg(owner.address, category);
+      console.log("New egg created:", response);
+      alert("New egg created successfully!");
+    } catch (error) {
+      console.error("Create New Egg Error:", error);
+      alert("Failed to create new egg. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const initDashboard = async () => {
+      try {
+        await nakama.authenticate();
+        await getOwner();
+        await loadPets();
+      } catch (error) {
+        console.error("Dashboard initialization failed:", error);
+      }
+    };
+
+    initDashboard();
+  }, []);
+
+  const truncateAddress = (address) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA]">
       {/* Title Section */}
@@ -293,7 +227,7 @@ const Dashboard = () => {
         <div className="flex items-center space-x-6">
           {/* Player Avatar */}
           <Image
-            src="/icons/gacha/legendary/unicorn/3.png"
+            src="https://pbs.twimg.com/profile_images/1522047602702880769/rUanH7Tv_400x400.jpg"
             alt="Metamon Avatar"
             width={100}
             height={100}
@@ -306,7 +240,7 @@ const Dashboard = () => {
               {playerProfile.nickname}
             </h2>
             <p className="text-md text-gray-600">
-              🏠 Address: {playerProfile.address}
+              🏠 Address: {truncateAddress(playerProfile.address)}
             </p>
             <p className="text-md text-gray-600">
               📅 Joined: {playerProfile.joinedAt}
@@ -443,94 +377,60 @@ const Dashboard = () => {
 
       {selectedAction === "managePet" && (
         <div className="mt-8 p-6 bg-white rounded-lg shadow-lg w-full max-w-5xl border-8 border-[#A8E6CF] flex flex-col items-center">
-          <h2 className="text-center text-2xl font-bold text-[#FFAAA5] mb-4">
-            Manage Your Metamons 🐾
-          </h2>
+            <h2 className="text-center text-2xl font-bold text-[#FFAAA5] mb-4">
+                Your Pets ({pets.length})
+            </h2>
+            
+            <div className="grid grid-cols-3 gap-4 w-full">
+                {pets.map((petId) => (
+                    <div key={petId} className="bg-[#fef4f4] rounded-lg p-4 shadow-md">
+                        <h3 className="text-lg font-bold text-center mb-2">Pet #{petId}</h3>
 
-          <p className="text-center text-gray-600 mb-4">
-            Interact, feed, and train your adorable digital companions.
-          </p>
+                        <div className="flex flex-col items-center">
+                          {/* Pet Image */}
+                          <Image
+                            src="/gacha/common/dog/1.png" // Default image, should be updated with actual pet image
+                            alt={`Pet ${petId}`}
+                            width={80}
+                            height={80}
+                            className="mb-2 rounded-lg"
+                          />
+                          
+                          {/* Pet Stats */}
+                          <div className="w-full space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Level:</span>
+                              <span className="font-bold">1</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Happiness:</span>
+                              <span className="font-bold">100%</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Last Fed:</span>
+                              <span className="font-bold">2h ago</span>
+                            </div>
+                          </div>
 
-          {/* Metamon Profile */}
-          <div className="bg-[#fef4f4] rounded-lg p-6 shadow-md border border-[#FFAAA5] w-full">
-            <h3 className="text-center text-xl font-bold text-[#AA96DA] mb-4">
-              Your Metamon: "Drako"
-            </h3>
-
-            <div className="flex items-center space-x-6">
-              {/* Metamon Image */}
-              <Image
-                src="/gacha/rare/fox/1.png"
-                alt="Metamon"
-                width={150}
-                height={150}
-              />
-
-              {/* Pet Stats */}
-              <div className="flex flex-col space-y-2">
-                <p className="text-gray-700">
-                  🌟 Evolution Stage: <b>2</b>
-                </p>
-                <p className="text-gray-700">
-                  🍗 Hunger: <b>80/100</b>
-                </p>
-                <p className="text-gray-700">
-                  🎾 Happiness: <b>65/100</b>
-                </p>
-                <p className="text-gray-700">
-                  🛁 Hygiene: <b>50/100</b>
-                </p>
-                <p className="text-gray-700">
-                  ⚡ Energy: <b>90/100</b>
-                </p>
-              </div>
-
-               {/* See Profile Button */}
-              <div className="ml-auto">
-                <button
-                  className="bg-[#A8D8EA] text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
-                  onClick={() => router.push("/profile")}
-                >
-                  See Profile
-                </button>
-              </div>
+                          {/* Action Buttons */}
+                          <div className="mt-3 flex gap-2">
+                            <button 
+                              className="px-3 py-1 text-sm bg-[#A8D8EA] text-white rounded-lg hover:opacity-80 transition-opacity"
+                              onClick={() => console.log(`Feed pet ${petId}`)}>
+                              Feed
+                            </button>
+                            <button 
+                              className="px-3 py-1 text-sm bg-[#FFAAA5] text-white rounded-lg hover:opacity-80 transition-opacity"
+                              onClick={() => console.log(`Play with pet ${petId}`)}>
+                              Play
+                            </button>
+                          </div>
+                        </div>
+                    </div>
+                ))}
             </div>
-          </div>
-
-          {/* Interaction Buttons */}
-          <div className="flex space-x-4 mt-6">
-            <button
-              className="bg-[#FFAAA5] text-white px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
-              onClick={() => router.push("/feedingRoom")}>
-              Feed 🍖
-            </button>
-
-            <button
-              className="bg-[#AA96DA] text-white px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
-              onClick={() => interactWithMetamon("play")}>
-              Play 🎾
-            </button>
-
-            <button
-              className="bg-[#A8D8EA] text-white px-6 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform"
-              onClick={() => interactWithMetamon("clean")}>
-              Clean 🛁
-            </button>
-          </div>
-
-          {/* Evolution Progress */}
-          <div className="mt-6 text-center">
-            <h3 className="text-lg font-semibold text-[#AA96DA]">
-              Evolution Progress: 1200 / 6000 XP
-            </h3>
-            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
-              <div
-                className="bg-[#FFAAA5] h-4 rounded-full"
-                style={{ width: "20%" }}></div>
-            </div>
-          </div>
         </div>
-      )}
+    )}
 
       {/* Evolution List (BELOW the Game Console) */}
       {selectedAction === "evolutionDictionary" && (

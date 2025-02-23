@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-const FeedingRoom = () => {
+const Shop = () => {
   const router = useRouter();
 
   // Metamon Stats
@@ -280,4 +280,4 @@ const FeedingRoom = () => {
   );
 };
 
-export default FeedingRoom;
+export default Shop;

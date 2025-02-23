@@ -136,6 +136,27 @@ func GachaSpawnerSystem(world cardinal.WorldContext) error {
 				return msg.CreateEggResult{Success: false}, nil
 			}
 
+			var owner comp.Owner
+
+			err := cardinal.NewSearch().Entity(
+				filter.Exact(filter.Component[comp.Owner]())).
+				Each(world, func(id types.EntityID) bool {
+					o, err := cardinal.GetComponent[comp.Owner](world, id)
+					if err != nil {
+						return true
+					}
+					if o.Address == create.Msg.Owner {
+						owner = *o
+						return false
+					}
+					return true
+				})
+
+			if err != nil {
+				return msg.CreateEggResult{
+					Success: false,
+				}, err
+			}
 			dna, err := generateDNA(pool)
 			if err != nil {
 				return msg.CreateEggResult{Success: false}, err
@@ -145,6 +166,7 @@ func GachaSpawnerSystem(world cardinal.WorldContext) error {
 				DNA:         dna,
 				IncubatedAt: time.Now().Unix(),
 				HatchTime:   time.Now().Unix() + EggHatchTime,
+				Owner:       owner,
 			}
 
 			id, err := cardinal.Create(world, egg)

@@ -46,7 +46,7 @@ export default function RootLayout({ children }) {
       <Providers>
       <body
         className={`${pressStart2P.className} antialiased`}
-      >
+        >
         {children}
       </body>
       </Providers>

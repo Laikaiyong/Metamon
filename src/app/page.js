@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useNakama } from "./providers";
@@ -10,182 +10,88 @@ export default function Home() {
   const [account, setAccount] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [nickname, setNickname] = useState("");
-  const [persona, setPersona] = useState("_test_persona"); // Default persona
   const [isLoading, setIsLoading] = useState(false);
-  const [session, setSession] = useState(null);
-  const [socket, setSocket] = useState(null);
-
-  const client = useNakama();
+  
+  const nakama = useNakama();
   const router = useRouter();
 
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
+ 
   const connectToMetaMask = async () => {
-    authenticate();
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        setAccount(accounts[0]);
-        console.log("Connected to MetaMask:", accounts[0]);
-
-        // Show modal after successful connection
-        const existingOwnerData = localStorage.getItem("ownerData");
-        if (existingOwnerData) {
-          router.push("/dashboard");
-          return;
-        }
-        setShowModal(true);
-      } catch (error) {
-        console.error("Failed to connect to MetaMask", error);
+    try {
+      if (!window.ethereum) {
+        alert("MetaMask is not installed. Please install it to use this feature.");
+        return;
       }
-    } else {
-      alert(
-        "MetaMask is not installed. Please install it to use this feature."
-      );
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      setAccount(accounts[0]);
+      console.log("Connected to MetaMask:", accounts[0]);
+
+      await nakama.authenticate();
+
+      const existingOwnerData = localStorage.getItem("ownerData");
+      if (existingOwnerData) {
+        router.push("/dashboard");
+        return;
+      }
+      
+      setShowModal(true);
+    } catch (error) {
+      console.error("Failed to connect:", error);
     }
   };
 
   const disconnectMetaMask = () => {
     setAccount(null);
     setShowModal(false);
-    console.log("Disconnected from MetaMask");
-  };
-
-  const truncateAddress = (address) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-  async function createPersona() {
-    try {
-      const payload = {
-        personaTag: nickname,
-        storage: {
-          metadata: {},
-          version: 1
-        }
-      };
-
-      const rpcResponse = await client.rpc(
-        session,
-        "nakama/claim-persona",
-        payload
-      );
-      console.log("Persona created:", rpcResponse);
-      setPersona(rpcResponse);
-      return rpcResponse;
-    } catch (error) {
-      console.error("Failed to create persona:", error);
-      throw error;
-    }
-  }
-
-  const authenticate = async () => {
-    // No need to create client here since it's already provided via useNakama hook
-
-    try {
-      let deviceId = localStorage.getItem("deviceId");
-      if (!deviceId) {
-        deviceId = uuidv4();
-        localStorage.setItem("deviceId", deviceId);
-      }
-      const newSession = await client.authenticateDevice(deviceId, true);
-      setSession(newSession);
-      localStorage.setItem("user_id", newSession.user_id);
-
-      const trace = false;
-      const newSocket = client.createSocket(false, trace);
-      await newSocket.connect(newSession);
-      setSocket(newSocket);
-
-      return newSession;
-      // } else {
-        //   const session = await client.authenticateDevice(deviceId, true);
-      //   setSession(session);
-      //   localStorage.setItem("user_id", session.user_id);
-      //   const oldSession = await client.linkDevice(session, deviceId);
-
-      //   const trace = false;
-      //   const newSocket = client.createSocket(false, trace);
-      //   await newSocket.connect(oldSession);
-      //   setSocket(newSocket);
-
-      //   return oldSession;
-    } catch (error) {
-      console.error("Authentication failed:", error);
-      throw error;
-    }
   };
 
   const createOwner = async () => {
-    // let deviceId = localStorage.getItem("deviceId");
-    // // if (!deviceId) {
-    //   await createPersona();
-    // // }
-    console.log("Starting createOwner function");
-
     if (!nickname.trim()) {
-      console.log("Nickname validation failed - empty nickname");
       alert("Please enter a nickname.");
       return;
     }
 
-    console.log("Nickname validation passed:", nickname);
     setIsLoading(true);
-    console.log("Loading state set to true");
 
     try {
-      // Create request payload
       const requestPayload = {
-        personaTag: nickname,
         namespace: "metamon",
         timestamp: Date.now(),
-        signature: account, // Using wallet address as signature
+        signature: account,
         nickname: nickname,
         address: account,
-        persona_type: persona,
+        metadata: {  // Added metadata
+          type: "player",
+          version: "1.0"
+        }
       };
 
-      console.log("Request Payload:", requestPayload);
-      console.log("Current session:", session);
+      const response = await nakama.createOwner(requestPayload);
+      console.log(response);
 
-      // API call options
-
-      console.log("Making RPC call to tx/game/createowner");
-      const response = await client.rpc(
-        session,
-        `tx/game/createowner`,
-        requestPayload
-      );
-      console.log("Raw RPC response:", response);
-
-      if (!response.payload) {
-        console.log("Empty response payload");
-        throw new Error("Empty response from server");
-      }
-
-      console.log("API Response payload:", response.payload);
-
-      // Save to localStorage
       const storageData = {
         ...requestPayload,
         created_at: new Date().toISOString(),
       };
-      console.log("Data to be saved in localStorage:", storageData);
       localStorage.setItem("ownerData", JSON.stringify(storageData));
-      console.log("Data successfully saved to localStorage");
 
-      console.log("Owner created successfully! Redirecting to dashboard...");
       router.push("/dashboard");
     } catch (error) {
-      console.error("Create Owner Error:", {
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString(),
-      });
+      console.error("Create Owner Error:", error);
       alert("Failed to create owner. Please try again.");
     } finally {
-      console.log("Setting loading state back to false");
       setIsLoading(false);
     }
+  };
+
+  const truncateAddress = (address) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   return (

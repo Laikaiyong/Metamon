@@ -48,6 +48,7 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterQuery[query.PetInfoRequest, query.PetInfoResponse](w, "petinfo", query.PetInfo),
 		cardinal.RegisterQuery[query.OwnerRequest, query.OwnerResponse](w, "ownerinfo", query.QueryOwner),
 		cardinal.RegisterQuery[query.OwnerPetsRequest, query.OwnerPetsResponse](w, "ownerpets", query.OwnerPets),
+		cardinal.RegisterQuery[query.OwnerEggsRequest, query.OwnerEggsResponse](w, "ownerpeteggs", query.OwnerEggs),
 	)
 
 	// Register systems
