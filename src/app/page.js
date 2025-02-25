@@ -11,18 +11,20 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [nickname, setNickname] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const nakama = useNakama();
   const router = useRouter();
 
   useEffect(() => {
     localStorage.clear();
   }, []);
- 
+
   const connectToMetaMask = async () => {
     try {
       if (!window.ethereum) {
-        alert("MetaMask is not installed. Please install it to use this feature.");
+        alert(
+          "MetaMask is not installed. Please install it to use this feature."
+        );
         return;
       }
 
@@ -33,14 +35,6 @@ export default function Home() {
       console.log("Connected to MetaMask:", accounts[0]);
 
       await nakama.authenticate();
-
-      const existingOwnerData = localStorage.getItem("ownerData");
-      if (existingOwnerData) {
-        router.push("/dashboard");
-        return;
-      }
-      
-      setShowModal(true);
     } catch (error) {
       console.error("Failed to connect:", error);
     }
@@ -66,10 +60,11 @@ export default function Home() {
         signature: account,
         nickname: nickname,
         address: account,
-        metadata: {  // Added metadata
+        metadata: {
+          // Added metadata
           type: "player",
-          version: "1.0"
-        }
+          version: "1.0",
+        },
       };
 
       const response = await nakama.createOwner(requestPayload);
@@ -81,7 +76,7 @@ export default function Home() {
       };
       localStorage.setItem("ownerData", JSON.stringify(storageData));
 
-      router.push("/dashboard");
+      router.push("/full");
     } catch (error) {
       console.error("Create Owner Error:", error);
       alert("Failed to create owner. Please try again.");
@@ -95,69 +90,119 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA]">
-      {/* Background Image Layer */}
-      {/* <div className="fixed inset-0 z-0">
-        <Image
-          src="https://64.media.tumblr.com/2a147549f69f13da935aec570f2c2c1e/91cbac430d1b6d34-e0/s400x600/48c771b5a32f873b165b64aafea8ea613c5e9ff9.png"
-          alt="Fantasy Background"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[rgba(0,0,0,0.4)]"></div>
-      </div> */}
+    <div className="flex min-h-screen bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA]">
+      <div className="container mx-auto flex items-center justify-center gap-6 px-6">
+        {/* Left Column - Main Content */}
+        <div className="w-[800px]">
+          <div className="p-8 bg-white rounded-lg shadow-lg border-8 border-[#A8E6CF]">
+            {/* Title Section */}
+            <div className="pixel-container relative mb-8">
+              <h1 className="font-jersey text-8xl text-center mb-4 kawaii-text-shadow">
+                {["M", "E", "T", "A", "M", "O", "N"].map((letter, i) => (
+                  <span
+                    key={i}
+                    className={`inline-block animate-bounce-${i} text-[#FFAAA5]`}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </h1>
+            </div>
 
-      {/* Title Section */}
-      <div className="pixel-container relative mb-8">
-        <h1 className="font-jersey text-8xl text-center mb-4 kawaii-text-shadow">
-          {["M", "E", "T", "A", "M", "O", "N"].map((letter, i) => (
-            <span
-              key={i}
-              className={`inline-block animate-bounce-${i} text-[#FFAAA5]`}>
-              {letter}
-            </span>
-          ))}
-        </h1>
-        <div className="pixel-decoration"></div>
-      </div>
+            {/* Game Console Frame */}
+            <div className="game-screen-frame rounded-2xl p-4 mb-6">
+              <div className="w-48 h-48 mx-auto relative screen-background rounded-2xl p-2 border-kawaii">
+                <Image
+                  src="/gif.gif"
+                  alt="Metamon Logo"
+                  width={192}
+                  height={192}
+                  className="pixel-art-screen"
+                  priority
+                />
+              </div>
+            </div>
 
-      {/* Game Console Frame */}
-      <div className="relative p-8 kawaii-pattern rounded-3xl shadow-xl max-w-md w-full border-8 border-[#A8E6CF] transform rotate-1">
-        {/* Screen Frame with Texture */}
-        <div className="game-screen-frame rounded-2xl p-4 mb-6">
-          {/* Game Screen */}
-          <div className="w-48 h-48 mx-auto relative screen-background rounded-2xl p-2 border-kawaii">
-            <Image
-              src="/gif.gif"
-              alt="Metamon Logo"
-              width={192}
-              height={192}
-              className="pixel-art-screen"
-              priority
-            />
-            <div className="screen-stars"></div>
-            <div className="screen-sparkle"></div>
+            {/* Connection Controls */}
+            <div className="w-full flex flex-col items-center space-y-4">
+              <button
+                onClick={connectToMetaMask}
+                className="w-4/5 bg-gradient-to-r from-[#FFAAA5] to-[#FFB5B5] text-white font-jersey py-3 rounded-xl text-3xl"
+              >
+                {account ? `${truncateAddress(account)}` : "Connect Wallet ✨"}
+              </button>
+
+              {account && (
+                <button
+                  onClick={disconnectMetaMask}
+                  className="w-4/5 bg-gradient-to-r from-[#AA96DA] to-[#A8D8EA] text-white font-jersey py-3 text-3xl rounded-xl"
+                >
+                  Disconnect 🌟
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Connection Controls */}
-        <div className="w-full flex flex-col items-center space-y-4">
-          <button
-            onClick={connectToMetaMask}
-            className="w-4/5 bg-gradient-to-r from-[#FFAAA5] to-[#FFB5B5] text-white font-jersey py-3 rounded-xl text-3xl 
-            shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-white/30">
-            {account ? `${truncateAddress(account)}` : "Connect Wallet ✨"}
-          </button>
-
-          {account && (
-            <button
-              onClick={disconnectMetaMask}
-              className="w-4/5 bg-gradient-to-r from-[#AA96DA] to-[#A8D8EA] text-white font-jersey py-3 text-3xl
-              rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300 border-2 border-white/30">
-              Disconnect 🌟
-            </button>
-          )}
+        {/* Right Column - Navigation */}
+        <div className="w-[400px] flex flex-col gap-6">
+          <div className="p-4 bg-white rounded-lg shadow-lg border-8 border-[#A8E6CF]">
+            <nav className="flex flex-col space-y-4">
+              {!account ? (
+                <>
+                  <button
+                    disabled
+                    className="flex items-center space-x-4 w-full p-3 bg-gray-100 rounded-lg"
+                  >
+                    <span className="text-2xl">👤</span>
+                    <span className="text-lg font-semibold text-gray-400">
+                      Connect Wallet First
+                    </span>
+                  </button>
+                  <button
+                    disabled
+                    className="flex items-center space-x-4 w-full p-3 bg-gray-100 rounded-lg"
+                  >
+                    <span className="text-2xl">🎮</span>
+                    <span className="text-lg font-semibold text-gray-400">
+                      Start Game
+                    </span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 bg-[#F9F5EB] rounded-lg">
+                    <h3 className="font-bold mb-2">Wallet Info</h3>
+                    <p className="text-sm text-gray-600">
+                      Address: {truncateAddress(account)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const existingOwnerData = localStorage.getItem("ownerData");
+                      if (existingOwnerData) {
+                        router.push("/full");
+                        return;
+                      }
+                
+                      setShowModal(true);
+                    }}
+                    className="flex items-center space-x-4 w-full p-3 bg-[#FFAAA5] hover:bg-[#FFB5B5] rounded-lg text-white transition-colors"
+                  >
+                    <span className="text-2xl">🎮</span>
+                    <span className="text-lg font-semibold">Play Game</span>
+                  </button>
+                  <button
+                    onClick={() => router.push("/wiki")}
+                    className="flex items-center space-x-4 w-full p-3 bg-[#A8D8EA] hover:bg-[#AA96DA] rounded-lg text-white transition-colors"
+                  >
+                    <span className="text-2xl">❔</span>
+                    <span className="text-lg font-semibold">Wiki</span>
+                  </button>
+                </>
+              )}
+            </nav>
+          </div>
         </div>
       </div>
 
@@ -189,7 +234,8 @@ export default function Home() {
               onClick={createOwner}
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-[#FFAAA5] to-[#FFB5B5] text-white font-bold py-3 rounded-xl
-            shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50">
+            shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50"
+            >
               {isLoading ? "Creating..." : "Create Character ✨"}
             </button>
           </div>

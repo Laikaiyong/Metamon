@@ -223,7 +223,7 @@ const Dashboard = () => {
       </div>
 
       {/* Player Profile (Tamagotchi Metamon Style) */}
-      <div className="mt-8 p-6 bg-white rounded-lg shadow-lg w-full max-w-5xl border-8 border-[#A8E6CF] mb-8 w-full">
+      <div className="mt-8 p-6 bg-white rounded-lg shadow-lg w-full max-w-5xl border-8 border-[#A8E6CF] mb-8">
         <div className="flex items-center space-x-6">
           {/* Player Avatar */}
           <Image
