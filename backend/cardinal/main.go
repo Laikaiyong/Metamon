@@ -31,6 +31,7 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterComponent[component.Pet](w),
 		cardinal.RegisterComponent[component.Owner](w),
 		cardinal.RegisterComponent[component.Egg](w),
+		cardinal.RegisterComponent[component.ShopItem](w),
 	)
 
 	// Register messages
@@ -49,6 +50,7 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterQuery[query.OwnerRequest, query.OwnerResponse](w, "ownerinfo", query.QueryOwner),
 		cardinal.RegisterQuery[query.OwnerPetsRequest, query.OwnerPetsResponse](w, "ownerpets", query.OwnerPets),
 		cardinal.RegisterQuery[query.OwnerEggsRequest, query.OwnerEggsResponse](w, "ownerpeteggs", query.OwnerEggs),
+		cardinal.RegisterQuery[query.OwnerItemsRequest, query.OwnerItemsResponse](w, "owneritems", query.OwnerItems),
 	)
 
 	// Register systems
@@ -58,7 +60,6 @@ func MustInitWorld(w *cardinal.World) {
 		system.HatchGachaSystem,
 		system.OwnerSystem,
 		system.OwnerSpawnerSystem,
-		system.OwnerGetterSystem,
 		system.PetLifecycleSystem,
 		system.EvolutionSystem,
 		system.PetCareSystem,

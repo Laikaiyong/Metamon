@@ -1,53 +1,84 @@
 # Metamon
 
-https://encodeclub.notion.site/mammothon-project-ideas
+A fully onchain virtual pet game bringing the nostalgic 90s Tamagotchi experience to Web3.
 
-https://www.youtube.com/watch?v=BCl-89ob120
+## Setup
 
-## **Project Concept**
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/metamon.git
+cd metamon
+```
 
-A fully onchain virtual pet game that brings the nostalgic 90s Tamagotchi experience to Web3, where each pet is a unique digital entity living entirely on the blockchain.
+2. Install dependencies
+```bash
+npm install
+```
 
-## **Core Features**
+3. Configure environment variables
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
 
-- Pets exist as autonomous agents using World Engine's entity component system
-- Pet states and actions are fully verifiable onchain
-- Each pet has unique DNA/traits that influence behavior
-- Pets require care (feeding, playing, cleaning) to stay healthy
-- Real-time aging and evolution system
+4. Run development server
+```bash
+npm run dev
+```
 
-## **Business Model**
+## Project Structure
 
-**Egg Gacha**
+```
+metamon/
+├── contracts/     # Smart contracts
+├── src/
+│   ├── components/   # React components
+│   ├── hooks/       # Custom hooks
+│   ├── utils/       # Helper functions
+│   └── pages/       # Page components
+├── public/       # Static assets
+└── test/         # Test files
+```
 
-- Users pay to obtain an egg that will hatch into their virtual pet with a gacha-like system
+## Key Features
 
-**Virtual Items**
+- **Onchain Pet System**: Autonomous pet agents using World Engine
+- **Pet Care Mechanics**: Feeding, playing, cleaning interactions
+- **Evolution System**: Real-time aging and state transitions
+- **Virtual Economy**: In-game items and breeding mechanics
 
-- Food tokens
-- Toys and accessories
-- Medicine and care items
-- Premium environments/habitats
+## Technical Stack
 
-**Breeding System**
+- **Smart Contracts**: World Engine (ECS)
+- **Frontend**: React
+- **Testing**: Hardhat/Foundry
+- **Blockchain**: Ethereum/L2
 
-- Fee for breeding two pets
-- Marketplace royalties from pet trading
+## Partner Technologies
 
-## **Tech Stack**
+### ArgusLab Integration
+- Utilizing ArgusLab's AI capabilities for pet behavior modeling
+- Implementing predictive analytics for pet state transitions
+- Real-time monitoring and analytics dashboard
 
-**Onchain Game Logic**
+### Nakama Backend
+- User authentication and account management
+- Leaderboard and social features implementation
+- Real-time multiplayer interactions
+- Data persistence and state management
 
-- **World Engine** (https://world.dev/quickstart)
+## Requirements
 
-**Frontend Options**
+- Node.js 16+
+- MetaMask or compatible Web3 wallet
+- Modern web browser
 
-You can use World Engine’s Nakama integration to easily integrate your game client built using your favorite framework or engine – https://world.dev/client/introduction
+## Contributing
 
-1. **Unity + Web3 SDK**
-    1. **Rich graphics and animations**
-    2. **Cross-platform support**
-    3. **WebGL export for browser play**
-2. **React**
-    1. **Recommended for web devs**
-    2. **Responsive design**
+1. Fork the repository
+2. Create feature branch
+3. Submit pull request
+
+## License
+
+MIT
