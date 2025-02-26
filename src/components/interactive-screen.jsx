@@ -25,6 +25,10 @@ const screenData = {
             "4-1": { targetMap: "kitchen", spawnPosition: { row: 7, col: 5 } }, // Entry point to kitchen
             "4-2": { targetMap: "bathroom", spawnPosition: { row: 3, col: 4 } }, // Entry point to bathroom
             "5-5": { targetMap: "gameRoom", spawnPosition: { row: 5, col: 3 } },// Entry point to game room
+        },
+        interactivePoints: {
+            "3-7": { menu: "eggRoomMenu"},
+            "3-4": { menu: "petRoomMenu"},
         }
     },
     shop: {
@@ -117,7 +121,7 @@ const screenData = {
     }
 }
 
-export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
+export default function InteractiveScreen({ currentScreen, setCurrentScreen, onPurchase }) {
     const [position, setPosition] = useState(screenData[currentScreen].spawnPosition);
     const [showPrompt, setShowPrompt] = useState(false);
     const [currentMenu, setCurrentMenu] = useState(null);
@@ -212,7 +216,7 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
                 style={{ backgroundImage: `url(${screenData[currentScreen]?.background})` }}
             >
                 <Image 
-                    src="/gacha2/rare/fox/2.png" 
+                    src="/hooman.png" 
                     alt="Metamon" 
                     width={tileSize} 
                     height={tileSize} 
@@ -229,7 +233,7 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
     
             {/* Interactive Menu - Placed Outside of Game Screen */}
             {menuOpen && currentMenu && (
-                <InteractivePoints menuType={currentMenu} onClose={() => setMenuOpen(false)} />
+                <InteractivePoints menuType={currentMenu} onClose={() => setMenuOpen(false)} onPurchase={onPurchase} />
             )}
         </>
     );

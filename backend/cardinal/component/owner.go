@@ -6,6 +6,7 @@ type Owner struct {
 	JoinedAt    int64  `json:"joined_at"`
 	PetCount    int    `json:"pet_count"`
 	LastPetTime int64  `json:"last_pet_time"`
+	Balance     int64  `json:"balance"`
 }
 
 func (Owner) Name() string {

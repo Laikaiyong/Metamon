@@ -32,6 +32,7 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterComponent[component.Owner](w),
 		cardinal.RegisterComponent[component.Egg](w),
 		cardinal.RegisterComponent[component.ShopItem](w),
+		cardinal.RegisterComponent[component.OwnerShopItem](w),
 	)
 
 	// Register messages
@@ -42,6 +43,8 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterMessage[msg.EvolveMsg, msg.EvolveResult](w, "evolvepet"),
 		cardinal.RegisterMessage[msg.CreateEggMsg, msg.CreateEggResult](w, "createegg"),
 		cardinal.RegisterMessage[msg.HatchEggMsg, msg.HatchEggResult](w, "hatchegg"),
+		cardinal.RegisterMessage[msg.PurchaseItemMsg, msg.PurchaseItemResult](w, "purchaseitem"),
+		cardinal.RegisterMessage[msg.ConsumeItemMsg, msg.ConsumeItemResult](w, "consumeitem"),
 	)
 
 	// Register queries
@@ -63,6 +66,8 @@ func MustInitWorld(w *cardinal.World) {
 		system.PetLifecycleSystem,
 		system.EvolutionSystem,
 		system.PetCareSystem,
+		system.ConsumeItemSystem,
+		system.PurchaseItemSystem
 	))
 
 	// Must(cardinal.RegisterInitSystems(w,

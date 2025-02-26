@@ -21,6 +21,7 @@ type GetOwnerResult struct {
 	OwnerID     types.EntityID `json:"owner_id"`
 	Address     string         `json:"address"`
 	Nickname    string         `json:"nickname"`
+	Balance     int64          `json:"balance"`
 	JoinedAt    int64          `json:"joined_at"`
 	PetCount    int            `json:"pet_count"`
 	LastPetTime int64          `json:"last_pet_time"`

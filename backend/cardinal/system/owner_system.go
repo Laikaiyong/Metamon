@@ -59,6 +59,7 @@ func OwnerSpawnerSystem(world cardinal.WorldContext) error {
 				JoinedAt:    time.Now().Unix(),
 				PetCount:    0,
 				LastPetTime: 0,
+				Balance:     0,
 			}
 
 			id, err := cardinal.Create(world, owner)

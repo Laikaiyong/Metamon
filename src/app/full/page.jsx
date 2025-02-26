@@ -136,6 +136,7 @@ export default function Page() {
             <InteractiveScreen
               currentScreen={currentScreen}
               setCurrentScreen={setCurrentScreen}
+              onPurchase={handlePurchase} 
             />
           </div>
 
@@ -157,6 +158,9 @@ export default function Page() {
                   </h2>
                   <p className="text-md text-gray-600">
                     🏠 Address: {truncateAddress(playerProfile.address)}
+                  </p>
+                  <p className="text-md text-gray-600">
+                    💰 Balance: {playerProfile.balance}
                   </p>
                   <p className="text-md text-gray-600">
                     📅 Joined: {playerProfile.joinedAt}
@@ -282,7 +286,7 @@ export default function Page() {
                     🚽 My Bathroom
                   </h2>
                   <p className="mt-2 text-gray-600">
-                    Check your bathroom status:
+                    Check your Metamon Hygiene status:
                   </p>
                   <ul className="mt-4 space-y-2">
                     <li className="p-3 bg-[#F4F4F4] rounded-md">
