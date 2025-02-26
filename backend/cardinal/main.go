@@ -67,7 +67,7 @@ func MustInitWorld(w *cardinal.World) {
 		system.EvolutionSystem,
 		system.PetCareSystem,
 		system.ConsumeItemSystem,
-		system.PurchaseItemSystem
+		system.PurchaseItemSystem,
 	))
 
 	// Must(cardinal.RegisterInitSystems(w,
