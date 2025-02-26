@@ -20,7 +20,7 @@ const screenData = {
         background: "/maps/map.png",
         spawnPosition: { row: 6, col: 3 }, // Default spawn position for this map
         mapChanges: {
-            "2-5": { targetMap: "shop", spawnPosition: { row: 5, col: 5 } }, // Entry point to shop
+            "2-5": { targetMap: "shop", spawnPosition: { row: 7, col: 6 } }, // Entry point to shop
             "4-1": { targetMap: "kitchen", spawnPosition: { row: 7, col: 5 } }, // Entry point to kitchen
             "4-2": { targetMap: "bathroom", spawnPosition: { row: 3, col: 4 } }, // Entry point to bathroom
             "5-5": { targetMap: "gameRoom", spawnPosition: { row: 5, col: 3 } },// Entry point to game room
@@ -97,7 +97,7 @@ const screenData = {
             [0, 0, 0, 0, 0, 0, 0, 0], // Row 8
         ],
         background: "/maps/game-room.png",
-        spawnPosition: { row: 4, col: 4},
+        spawnPosition: { row: 5, col: 3},
         mapChanges: {
             "6-3": { targetMap: "openMap", spawnPosition: { row: 6, col: 5 }}
         }
