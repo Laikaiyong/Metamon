@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import InteractivePoints from "./interactive-points";
 
 const screenData = {
     openMap: {
@@ -43,6 +44,9 @@ const screenData = {
         spawnPosition: { row: 7, col: 6 }, // Where the player spawns when entering
         mapChanges: {
             "8-6": { targetMap: "openMap", spawnPosition: { row: 2, col: 5 } } // Exit back to openMap
+        },
+        interactivePoints: {
+            "4-5": { menu: "shopMenu" },
         }
     },
     kitchen: {
@@ -62,7 +66,10 @@ const screenData = {
         spawnPosition: { row: 7, col: 5 }, // Where the player spawns when entering
         mapChanges: {
             "8-5": { targetMap: "openMap", spawnPosition: { row: 4, col: 1 } } // Exit back to open
-    },
+        },
+        interactivePoints: {
+            "3-7": { menu: "kitchenMenu" },
+        }
     },
     bathroom: {
         title: "Bathroom",
@@ -81,6 +88,9 @@ const screenData = {
         spawnPosition: { row: 4, col: 4},
         mapChanges: {
             "2-4": { targetMap: "openMap", spawnPosition: { row: 4, col: 2 } }
+        },
+        interactivePoints: {
+            "5-6": { menu: "bathroomMenu" },
         }
     },
     gameRoom: {
@@ -100,12 +110,18 @@ const screenData = {
         spawnPosition: { row: 5, col: 3},
         mapChanges: {
             "6-3": { targetMap: "openMap", spawnPosition: { row: 6, col: 5 }}
+        },
+        interactivePoints: {
+            "4-5": { menu: "gameRoomMenu" },
         }
     }
 }
 
 export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
     const [position, setPosition] = useState(screenData[currentScreen].spawnPosition);
+    const [showPrompt, setShowPrompt] = useState(false);
+    const [currentMenu, setCurrentMenu] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const tileMap = screenData[currentScreen].tileMap;
 
@@ -116,6 +132,21 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
     const [tileSize, setTileSize] = useState(
         Math.min(600 / numCols, 600 / numRows)
     );
+
+    // Handle open menu when on interactive point
+    useEffect(() => {
+        const handleKeyPress = (event) => {
+            if (event.key === "e" && showPrompt) {
+                setMenuOpen(true);
+            }
+            if (event.key === "Escape") {
+                setMenuOpen(false);
+            }
+        };
+    
+        window.addEventListener("keydown", handleKeyPress);
+        return () => window.removeEventListener("keydown", handleKeyPress);
+    }, [showPrompt]);
 
     // Handle window resize
     useEffect(() => {
@@ -157,6 +188,16 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
             } else {
                 setPosition({ row: newRow, col: newCol });
             }
+
+            const interactivePoint = screenData[currentScreen]?.interactivePoints?.[key];
+
+            if (interactivePoint) {
+                setShowPrompt(true);
+                setCurrentMenu(interactivePoint.menu);
+            } else {
+                setShowPrompt(false);
+                setCurrentMenu(null);
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
@@ -165,9 +206,31 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen }) {
 
     return (
         <>
-            <div className="relative w-[600px] h-[600px] border-8 border-[#A8E6CF] bg-cover" style={{ backgroundImage: `url(${screenData[currentScreen]?.background})` }}>
-                <Image src="/gacha2/rare/fox/2.png" alt="Metamon" width={tileSize} height={tileSize} style={{ position: "absolute", top: `${position.row * tileSize}px`, left: `${position.col * tileSize}px` }} />
+            {/* Game Screen */}
+            <div 
+                className="relative w-[600px] h-[600px] border-8 border-[#A8E6CF] bg-cover"
+                style={{ backgroundImage: `url(${screenData[currentScreen]?.background})` }}
+            >
+                <Image 
+                    src="/gacha2/rare/fox/2.png" 
+                    alt="Metamon" 
+                    width={tileSize} 
+                    height={tileSize} 
+                    style={{ position: "absolute", top: `${position.row * tileSize}px`, left: `${position.col * tileSize}px` }} 
+                />
+                
+                {/* Interaction Prompt */}
+                {showPrompt && !menuOpen && (
+                    <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black text-white py-2 px-3 rounded">
+                        Press E to open menu
+                    </div>
+                )}
             </div>
+    
+            {/* Interactive Menu - Placed Outside of Game Screen */}
+            {menuOpen && currentMenu && (
+                <InteractivePoints menuType={currentMenu} onClose={() => setMenuOpen(false)} />
+            )}
         </>
     );
 }

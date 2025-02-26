@@ -5,6 +5,9 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useNakama } from "../providers";
 import { useRouter } from "next/navigation";
+import foodItems from "@/data/foodItems";
+
+import ShopMenu from "@/components/interactive-points";
 
 export default function Page() {
   const router = useRouter();
@@ -28,6 +31,15 @@ export default function Page() {
   const [isReady, setIsReady] = useState(false);
 
   const [pets, setPets] = useState([]);
+
+  const [purchasedItems, setPurchasedItems] = useState({});
+  //handle purchasing for item
+  const handlePurchase = (itemName) => {
+    setPurchasedItems((prevItems) => ({
+      ...prevItems,
+      [itemName]: prevItems[itemName] ? prevItems[itemName] + 1 : 1,
+    }));
+  };
 
   const loadPets = async () => {
     try {
@@ -113,18 +125,6 @@ export default function Page() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Food items list
-  const foodItems = [
-    { name: "Apple", image: "/shop/apple.png", price: 50 },
-    { name: "Carrot", image: "/shop/carrot.png", price: 30 },
-    { name: "Broccoli", image: "/shop/broccoli.png", price: 20 },
-    { name: "Banana", image: "/shop/banana.png", price: 40 },
-    { name: "Grapes", image: "/shop/grape.png", price: 60 },
-    { name: "Orange", image: "/shop/orange.png", price: 35 },
-    { name: "Strawberry", image: "/shop/strawberry.png", price: 45 },
-    { name: "Watermelon", image: "/shop/watermelon.png", price: 70 },
-  ];
-
   return (
     <>
       {/* Wrapper */}
@@ -138,73 +138,6 @@ export default function Page() {
               setCurrentScreen={setCurrentScreen}
             />
           </div>
-
-          {/* Middle Column (diff screen diff stuff) */}
-          {/* If setCurrentScreen("shop") then if will see my purchased shop List */}
-          {/* Middle Column - Different Screens Based on Selection */}
-    <div className="w-full p-6 bg-white rounded-lg shadow-lg border-8 border-[#A8E6CF] h-[600px] overflow-y-auto">
-
-    {currentScreen === "shop" && (
-    <div>
-      <h2 className="text-2xl font-bold text-[#4b4b4b] mb-4 text-center">Your MetaItem </h2>
-
-      {/* Food Items Grid */}
-      <div className="grid grid-cols-2 gap-6 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[350px] overflow-y-auto">
-        {foodItems.map((item, index) => (
-          <div
-            key={index}
-            className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md transition-transform hover:scale-105"
-          >
-            <Image src={item.image} alt={item.name} width={80} height={80} />
-            <p className="text-[#5D4037] text-lg font-semibold mt-2">{item.name}</p>
-            <div className="flex items-center space-x-3 mt-2">
-              <span className="bg-[#D4B483] text-white px-3 py-1 rounded-lg shadow-md text-sm">{item.price} 🪙</span>
-              <button className="bg-[#FFAAA5] text-white px-3 py-1 rounded-lg shadow-md hover:scale-110 transition-transform">
-                Buy
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-
-      {currentScreen === "kitchen" && (
-        <div>
-          <h2 className="text-xl font-bold text-[#4b4b4b]">🍳 My Kitchen</h2>
-          <p className="mt-2 text-gray-600">You have the following ingredients:</p>
-          <ul className="mt-4 space-y-2">
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Eggs 🥚</li>
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Milk 🥛</li>
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Flour 🌾</li>
-          </ul>
-        </div>
-      )}
-
-      {currentScreen === "bathroom" && (
-        <div>
-          <h2 className="text-xl font-bold text-[#4b4b4b]">🚽 My Bathroom</h2>
-          <p className="mt-2 text-gray-600">Check your bathroom status:</p>
-          <ul className="mt-4 space-y-2">
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Soap: Full 🧼</li>
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Shampoo: Half Left 🛁</li>
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Toothpaste: New Tube! 🦷</li>
-          </ul>
-        </div>
-      )}
-
-      {currentScreen === "gameRoom" && (
-        <div>
-          <h2 className="text-xl font-bold text-[#4b4b4b]">🎮 Game Room</h2>
-          <p className="mt-2 text-gray-600">Your available games:</p>
-          <ul className="mt-4 space-y-2">
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Retro Racing 🏎️</li>
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Puzzle Kingdom 🧩</li>
-            <li className="p-3 bg-[#F4F4F4] rounded-md">Battle Arena ⚔️</li>
-          </ul>
-        </div>
-      )}
-    </div>
 
           {/* Right Column - Profile & Stats Cards */}
           <div className="w-full flex flex-col gap-6">
@@ -240,55 +173,150 @@ export default function Page() {
 
             {/* Bottom Stats Card */}
             <div className="flex flex-col space-y-4 p-6 bg-white rounded-lg shadow-lg border-8 border-[#A8E6CF]">
-              <button
-                onClick={() => setCurrentScreen("shop")}
-                className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
-              >
-                <span className="text-2xl">🏪</span>
-                <span className="text-lg font-semibold text-[#4b4b4b]">
-                  Shop
-                </span>
-              </button>
+              {currentScreen === "openMap" && (
+                <div>
+                  <button
+                    onClick={() => setCurrentScreen("shop")}
+                    className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
+                  >
+                    <span className="text-2xl">🏪</span>
+                    <span className="text-lg font-semibold text-[#4b4b4b]">
+                      Shop
+                    </span>
+                  </button>
 
-              <button
-                onClick={() => setCurrentScreen("kitchen")}
-                className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
-              >
-                <span className="text-2xl">🍳</span>
-                <span className="text-lg font-semibold text-[#4b4b4b]">
-                  Kitchen
-                </span>
-              </button>
+                  <button
+                    onClick={() => setCurrentScreen("kitchen")}
+                    className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
+                  >
+                    <span className="text-2xl">🍳</span>
+                    <span className="text-lg font-semibold text-[#4b4b4b]">
+                      Kitchen
+                    </span>
+                  </button>
 
-              <button
-                onClick={() => setCurrentScreen("bathroom")}
-                className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
-              >
-                <span className="text-2xl">🚽</span>
-                <span className="text-lg font-semibold text-[#4b4b4b]">
-                  Bathroom
-                </span>
-              </button>
+                  <button
+                    onClick={() => setCurrentScreen("bathroom")}
+                    className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
+                  >
+                    <span className="text-2xl">🚽</span>
+                    <span className="text-lg font-semibold text-[#4b4b4b]">
+                      Bathroom
+                    </span>
+                  </button>
 
-              <button
-                onClick={() => setCurrentScreen("gameRoom")}
-                className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
-              >
-                <span className="text-2xl">🎮</span>
-                <span className="text-lg font-semibold text-[#4b4b4b]">
-                  Game Room
-                </span>
-              </button>
+                  <button
+                    onClick={() => setCurrentScreen("gameRoom")}
+                    className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
+                  >
+                    <span className="text-2xl">🎮</span>
+                    <span className="text-lg font-semibold text-[#4b4b4b]">
+                      Game Room
+                    </span>
+                  </button>
 
-              <button
-                onClick={() => router.push("/wiki")}
-                className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
-              >
-                <span className="text-2xl">📚</span>
-                <span className="text-lg font-semibold text-[#4b4b4b]">
-                  Wiki
-                </span>
-              </button>
+                  <button
+                    onClick={() => router.push("/wiki")}
+                    className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"
+                  >
+                    <span className="text-2xl">📚</span>
+                    <span className="text-lg font-semibold text-[#4b4b4b]">
+                      Wiki
+                    </span>
+                  </button>
+                </div>
+              )}
+              {currentScreen === "shop" && (
+                
+                <div>
+                  <h2 className="text-2xl font-bold text-[#4b4b4b] mb-4 text-center">
+                    Your MetaItem{" "}
+                  </h2>
+
+                  {Object.keys(purchasedItems).length === 0 ? (
+                    <p className="text-center text-gray-600">
+                      You haven't purchased any items yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-6 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[350px] overflow-y-auto">
+                      {Object.entries(purchasedItems).map(
+                        ([itemName, quantity], index) => (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md"
+                          >
+                            <Image
+                              src={`/shop/${itemName.toLowerCase()}.png`}
+                              alt={itemName}
+                              width={80}
+                              height={80}
+                            />
+                            <p className="text-[#5D4037] text-lg font-semibold mt-2">
+                              {itemName} x{quantity}
+                            </p>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {currentScreen === "kitchen" && (
+                <div>
+                  <h2 className="text-xl font-bold text-[#4b4b4b]">
+                    🍳 My Kitchen
+                  </h2>
+                  <p className="mt-2 text-gray-600">
+                    You have the following ingredients:
+                  </p>
+                  <ul className="mt-4 space-y-2">
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">Eggs 🥚</li>
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">Milk 🥛</li>
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">Flour 🌾</li>
+                  </ul>
+                </div>
+              )}
+              {currentScreen === "bathroom" && (
+                <div>
+                  <h2 className="text-xl font-bold text-[#4b4b4b]">
+                    🚽 My Bathroom
+                  </h2>
+                  <p className="mt-2 text-gray-600">
+                    Check your bathroom status:
+                  </p>
+                  <ul className="mt-4 space-y-2">
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">
+                      Soap: Full 🧼
+                    </li>
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">
+                      Shampoo: Half Left 🛁
+                    </li>
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">
+                      Toothpaste: New Tube! 🦷
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {currentScreen === "gameRoom" && (
+                <div>
+                  <h2 className="text-xl font-bold text-[#4b4b4b]">
+                    🎮 Game Room
+                  </h2>
+                  <p className="mt-2 text-gray-600">Your available games:</p>
+                  <ul className="mt-4 space-y-2">
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">
+                      Retro Racing 🏎️
+                    </li>
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">
+                      Puzzle Kingdom 🧩
+                    </li>
+                    <li className="p-3 bg-[#F4F4F4] rounded-md">
+                      Battle Arena ⚔️
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>
