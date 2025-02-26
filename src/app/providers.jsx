@@ -114,6 +114,7 @@ class Nakama {
     }
 
     
+    // Transactions (Messages)
     async createOwner(payload) {
         if (!this.session) throw new Error("No active session");
         if (!this.gameState.personaTag) throw new Error("No persona tag found");
@@ -140,79 +141,103 @@ class Nakama {
         }
     }
 
-    async getOwner(address) {
+    async carePet(petId) {
         if (!this.session) throw new Error("No active session");
-        if (!this.gameState.personaTag) throw new Error("No persona tag found");
-
-        try {
-            const response = await this.client.rpc(
-                this.session,
-                "query/game/ownerinfo", // Use query endpoint
-                {
-                    personaTag: this.gameState.personaTag,
-                    namespace: "metamon",
-                    address: address
-                }
-            );
-
-            return response.payload.owner; // Returns {ownerId, owner} from OwnerResponse
-        } catch (error) {
-            console.error("Get Owner Error:", error);
-            throw error;
-        }
+        return await this.client.rpc(
+            this.session,
+            "tx/game/carepet",
+            { personaTag: this.gameState.personaTag, petId }
+        );
     }
 
-    async getOwnerEggs(owner) {
+    async evolvePet(petId) {
         if (!this.session) throw new Error("No active session");
-        if (!this.gameState.personaTag) throw new Error("No persona tag found");
-
-        try {
-            const response = await this.client.rpc(
-                this.session,
-                "query/game/ownerpeteggs",
-                {
-                    personaTag: this.gameState.personaTag,
-                    namespace: "metamon",
-                    owner: owner
-                }
-            );
-
-            return response.payload.eggs;
-        } catch (error) {
-            console.error("Get Owner Pets Error:", error);
-            throw error;
-        }
+        return await this.client.rpc(
+            this.session,
+            "tx/game/evolvepet",
+            { personaTag: this.gameState.personaTag, petId }
+        );
     }
-
-    async getOwnerPets(owner) {
-        if (!this.session) throw new Error("No active session");
-        if (!this.gameState.personaTag) throw new Error("No persona tag found");
-
-        try {
-            const response = await this.client.rpc(
-                this.session,
-                "query/game/ownerpets",
-                {
-                    personaTag: this.gameState.personaTag,
-                    namespace: "metamon",
-                    owner: owner
-                }
-            );
-
-            return response.payload.pets;
-        } catch (error) {
-            console.error("Get Owner Pets Error:", error);
-            throw error;
-        }
-    }
-
 
     async createEgg(ownerAddress, tier) {
         if (!this.session) throw new Error("No active session");
         return await this.client.rpc(
             this.session,
             "tx/game/createegg",
-            { personaTag: this.gameState.personaTag, owner: ownerAddress, tier: tier }
+            { personaTag: this.gameState.personaTag, owner: ownerAddress, tier }
+        );
+    }
+
+    async hatchEgg(eggId) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "tx/game/hatchegg",
+            { personaTag: this.gameState.personaTag, eggId }
+        );
+    }
+
+    async purchaseItem(itemId) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "tx/game/purchaseitem",
+            { personaTag: this.gameState.personaTag, itemId }
+        );
+    }
+
+    async consumeItem(itemId, targetId) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "tx/game/consumeitem",
+            { personaTag: this.gameState.personaTag, itemId, targetId }
+        );
+    }
+
+    // Queries
+    async getPetInfo(petId) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "query/game/petinfo",
+            { personaTag: this.gameState.personaTag, petId }
+        );
+    }
+
+    async getOwner(address) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "query/game/ownerinfo",
+            { personaTag: this.gameState.personaTag, address }
+        );
+    }
+
+    async getOwnerPets(owner) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "query/game/ownerpets",
+            { personaTag: this.gameState.personaTag, owner }
+        );
+    }
+
+    async getOwnerEggs(owner) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "query/game/ownerpeteggs",
+            { personaTag: this.gameState.personaTag, owner }
+        );
+    }
+
+    async getOwnerItems(owner) {
+        if (!this.session) throw new Error("No active session");
+        return await this.client.rpc(
+            this.session,
+            "query/game/owneritems",
+            { personaTag: this.gameState.personaTag, owner }
         );
     }
 }
