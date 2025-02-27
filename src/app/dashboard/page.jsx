@@ -28,8 +28,6 @@ export default function Page() {
 
   const [isReady, setIsReady] = useState(false);
 
-  const [pets, setPets] = useState([]);
-
   const [purchasedItems, setPurchasedItems] = useState({});
   const [purchasedFood, setPurchasedFood] = useState({});
   const [purchasedWash, setPurchasedWash] = useState({});
@@ -72,22 +70,8 @@ export default function Page() {
   
     setPurchasedFood(storedFood);
     setPurchasedWash(storedWash);
-  }, [purchasedFood, purchasedWash]);  // ✅ Watches correct state updates
-   // ✅ Runs every time an item is purchased
+  }, []); // Only run once on mount
   
-
-  const loadPets = async () => {
-    try {
-      const ownerData = JSON.parse(localStorage.getItem("ownerData"));
-      if (!ownerData?.address) return;
-
-      const petIds = await nakama.getOwnerPets(ownerData.address);
-      console.log("Pet IDs:", petIds); // Debug log
-      // setPets(petIds);
-    } catch (error) {
-      console.error("Load Pets Error:", error);
-    }
-  };
 
   const nakama = useNakama();
 
@@ -119,36 +103,11 @@ export default function Page() {
     }
   };
 
-  const createNewEgg = async () => {
-    try {
-      setIsLoading(true);
-      await nakama.authenticate();
-      const owner = JSON.parse(localStorage.getItem("ownerData"));
-      const tier = Math.floor(Math.random() * 4) + 1;
-      const tierToCategory = {
-        1: "common",
-        2: "rare",
-        3: "epic",
-        4: "legendary",
-      };
-      const category = tierToCategory[tier];
-      const response = await nakama.createEgg(owner.address, category);
-      console.log("New egg created:", response);
-      alert("New egg created successfully!");
-    } catch (error) {
-      console.error("Create New Egg Error:", error);
-      alert("Failed to create new egg. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     const initDashboard = async () => {
       try {
         await nakama.authenticate();
         const result = await getOwner();
-        await loadPets();
       } catch (error) {
         console.error("Dashboard initialization failed:", error);
       }

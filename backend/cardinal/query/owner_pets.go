@@ -14,11 +14,13 @@ type OwnerPetsRequest struct {
 }
 
 type OwnerPetsResponse struct {
-	Pets []comp.Pet `json:"pets"`
+	Pets   []comp.Pet       `json:"pets"`
+	PetsId []types.EntityID `json:"petsId"`
 }
 
 func OwnerPets(world cardinal.WorldContext, req *OwnerPetsRequest) (*OwnerPetsResponse, error) {
 	var pets []comp.Pet
+	var petsId []types.EntityID
 
 	log.Printf("OwnerPets: Searching for pets with owner address: %s", req.Address)
 
@@ -39,6 +41,7 @@ func OwnerPets(world cardinal.WorldContext, req *OwnerPetsRequest) (*OwnerPetsRe
 			if pet.Owner.Address == req.Address {
 				log.Printf("Match found! Adding pet ID %v to results", id)
 				pets = append(pets, *pet)
+				petsId = append(petsId, id)
 			}
 			return true
 		})
@@ -51,5 +54,5 @@ func OwnerPets(world cardinal.WorldContext, req *OwnerPetsRequest) (*OwnerPetsRe
 	// Debug: Log results
 	log.Printf("Search complete. Processed %d pets, found %d matches", count, len(pets))
 
-	return &OwnerPetsResponse{Pets: pets}, nil
+	return &OwnerPetsResponse{Pets: pets, PetsId: petsId}, nil
 }

@@ -140,12 +140,16 @@ class Nakama {
         }
     }
 
-    async carePet(petId) {
+    async carePet(petId, action) {
         if (!this.session) throw new Error("No active session");
         return await this.client.rpc(
             this.session,
             "tx/game/carepet",
-            { personaTag: this.gameState.personaTag, petId }
+            {
+                personaTag: this.gameState.personaTag,
+                action: action,
+                petId
+            }
         );
     }
 
@@ -209,15 +213,6 @@ class Nakama {
         return await this.client.rpc(
             this.session,
             "query/game/ownerpets",
-            { personaTag: this.gameState.personaTag, owner }
-        );
-    }
-
-    async getOwnerEggs(owner) {
-        if (!this.session) throw new Error("No active session");
-        return await this.client.rpc(
-            this.session,
-            "query/game/ownerpeteggs",
             { personaTag: this.gameState.personaTag, owner }
         );
     }
