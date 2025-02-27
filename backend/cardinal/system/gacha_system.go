@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	comp "metamon/component"
 	"metamon/msg"
-	"time"
 
 	"pkg.world.dev/world-engine/cardinal"
 	"pkg.world.dev/world-engine/cardinal/filter"
@@ -66,66 +65,6 @@ var GachaPools = map[string]GachaPool{
 	},
 }
 
-const (
-	EggHatchTime = 24 * 60 * 60 // 24 hours in seconds
-)
-
-func HatchGachaSystem(world cardinal.WorldContext) error {
-	return cardinal.EachMessage[msg.HatchEggMsg, msg.HatchEggResult](
-		world,
-		func(hatch cardinal.TxData[msg.HatchEggMsg]) (msg.HatchEggResult, error) {
-			// Verify egg exists
-			egg, err := queryEgg(world, hatch.Msg.EggID)
-			if err != nil {
-				return msg.HatchEggResult{Success: false}, err
-			}
-
-			// Check if egg is ready to hatch
-			now := time.Now().Unix()
-			if now < egg.HatchTime {
-				return msg.HatchEggResult{Success: false}, nil
-			}
-
-			// Create pet from egg
-			pet := comp.Pet{
-				DNA:   egg.DNA,
-				Stats: GachaPools[egg.DNA.Rarity].BaseStats,
-				State: comp.State{
-					Health:      100,
-					Hunger:      100,
-					Happiness:   100,
-					Hygiene:     100,
-					Energy:      100,
-					Age:         0,
-					LastFed:     now,
-					LastCleaned: now,
-				},
-				Evolution: comp.Evolution{
-					Stage:       1,
-					Experience:  0,
-					NextStageAt: EvolutionThresholds[1],
-				},
-				Owner: egg.Owner,
-			}
-
-			// Create new pet entity
-			petID, err := cardinal.Create(world, pet)
-			if err != nil {
-				return msg.HatchEggResult{Success: false}, err
-			}
-
-			// Remove egg after successful hatching
-			if err := cardinal.Remove(world, hatch.Msg.EggID); err != nil {
-				return msg.HatchEggResult{Success: false}, err
-			}
-
-			return msg.HatchEggResult{
-				Success: true,
-				PetID:   petID,
-			}, nil
-		})
-}
-
 func GachaSpawnerSystem(world cardinal.WorldContext) error {
 	// Handle egg creation
 	return cardinal.EachMessage[msg.CreateEggMsg, msg.CreateEggResult](
@@ -162,11 +101,22 @@ func GachaSpawnerSystem(world cardinal.WorldContext) error {
 				return msg.CreateEggResult{Success: false}, err
 			}
 
-			egg := comp.Egg{
-				DNA:         dna,
-				IncubatedAt: time.Now().Unix(),
-				HatchTime:   time.Now().Unix() + EggHatchTime,
-				Owner:       owner,
+			egg := comp.Pet{
+				DNA:   dna,
+				Stats: GachaPools[dna.Rarity].BaseStats,
+				State: comp.State{
+					Health:    100,
+					Hunger:    100,
+					Happiness: 100,
+					Hygiene:   100,
+					Energy:    100,
+					Age:       0,
+				},
+				Evolution: comp.Evolution{
+					Stage:      1,
+					Experience: 0,
+				},
+				Owner: owner,
 			}
 
 			id, err := cardinal.Create(world, egg)
@@ -197,49 +147,4 @@ func generateDNA(pool GachaPool) (comp.DNA, error) {
 		Species:    species,
 		Rarity:     pool.Tier,
 	}, nil
-}
-
-func GachaSystem(world cardinal.WorldContext) error {
-	// Handle egg hatching
-	err := cardinal.NewSearch().Entity(
-		filter.Exact(filter.Component[comp.Egg]())).
-		Each(world, func(id types.EntityID) bool {
-			egg, err := cardinal.GetComponent[comp.Egg](world, id)
-			if err != nil {
-				return true
-			}
-
-			now := time.Now().Unix()
-			if now >= egg.HatchTime {
-				// Create pet from egg
-				pet := comp.Pet{
-					DNA:   egg.DNA,
-					Stats: GachaPools[egg.DNA.Rarity].BaseStats,
-					State: comp.State{
-						Health:    100,
-						Hunger:    100,
-						Happiness: 100,
-						Hygiene:   100,
-						Energy:    100,
-						Age:       0,
-					},
-					Evolution: comp.Evolution{
-						Stage:      1,
-						Experience: 0,
-					},
-				}
-
-				// Create new pet entity
-				_, err := cardinal.Create(world, pet)
-				if err != nil {
-					return true
-				}
-
-				// Remove egg after hatching
-				cardinal.Remove(world, id)
-			}
-			return true
-		})
-
-	return err
 }

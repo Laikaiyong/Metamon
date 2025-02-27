@@ -17,14 +17,6 @@ func queryPet(world cardinal.WorldContext, petID types.EntityID) (*comp.Pet, err
 	return pet, nil
 }
 
-func queryEgg(world cardinal.WorldContext, eggID types.EntityID) (*comp.Egg, error) {
-	egg, err := cardinal.GetComponent[comp.Egg](world, eggID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get egg: %v", err)
-	}
-	return egg, nil
-}
-
 func verifyPetOwner(world cardinal.WorldContext, petID types.EntityID, owner string) error {
 	pet, err := queryPet(world, petID)
 	if err != nil {

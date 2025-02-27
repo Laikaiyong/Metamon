@@ -36,12 +36,3 @@ type CreateEggResult struct {
 	EggID   types.EntityID `json:"eggId"`
 	DNA     comp.DNA       `json:"dna"`
 }
-
-type HatchEggMsg struct {
-	EggID types.EntityID `json:"eggId"`
-}
-
-type HatchEggResult struct {
-	Success bool           `json:"success"`
-	PetID   types.EntityID `json:"petId"`
-}
