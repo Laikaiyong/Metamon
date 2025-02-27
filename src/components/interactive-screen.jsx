@@ -199,20 +199,23 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
                 setCurrentScreen(newMapData.targetMap);
                 setTimeout(() => {
                     setPosition(newMapData.spawnPosition);
+                    setMenuOpen(false);
                 }, 0);
             } else {
                 setPosition({ row: newRow, col: newCol });
-            }
-        
-            const interactivePoint = screenData[currentScreen]?.interactivePoints?.[key];
+
+                const interactivePoint = screenData[currentScreen]?.interactivePoints?.[key];
         
             if (interactivePoint) {
                 setShowPrompt(true);
                 setCurrentMenu(interactivePoint.menu);
             } else {
                 setShowPrompt(false);
-                setCurrentMenu(null);
+                setMenuOpen(false);
             }
+            }
+        
+            
     };
 
     // Movement and Map Change
@@ -236,19 +239,22 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
                 setCurrentScreen(newMapData.targetMap);
                 setTimeout(() => {
                     setPosition(newMapData.spawnPosition);
+                    setShowPrompt(false);
+                    setCurrentMenu(null);
+                    setMenuOpen(false);
                 }, 0);
             } else {
                 setPosition({ row: newRow, col: newCol });
-            }
 
-            const interactivePoint = screenData[currentScreen]?.interactivePoints?.[key];
+                const interactivePoint = screenData[currentScreen]?.interactivePoints?.[key];
 
             if (interactivePoint) {
                 setShowPrompt(true);
                 setCurrentMenu(interactivePoint.menu);
             } else {
                 setShowPrompt(false);
-                setCurrentMenu(null);
+                setMenuOpen(false);
+            }
             }
         };
 
@@ -287,38 +293,39 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
         <div className="flex justify-between items-center lg:hidden">
                 <div className="grid grid-cols-3 gap-2 w-40 mt-6">
                     {/* Row 1 */}
-                    <div></div> {/* Empty Cell */}
+                    <div></div>
                     <button
                         onClick={() => handleMove("up")}
+                        className="transition-transform active:scale-105"
                     >
-                        <DPadButton content={"▲"}/>
+                        <DPadButton content={"/dpad-buttons/up.png"}/>
                     </button>
-                    <div></div> {/* Empty Cell */}
+                    <div></div>
 
                     {/* Row 2 */}
                     <button 
-                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        className="w-14 h-14 text-white rounded-lg flex items-center justify-center active:bg-gray-900 transition-transform active:scale-105"
                         onClick={() => handleMove("left")}
                     >
-                        <DPadButton content={"◀"}/>
+                        <DPadButton content={"/dpad-buttons/left.png"}/>
                     </button>
-                    <div></div> {/* Empty Cell (Center of Grid) */}
+                    <div></div>
                     <button 
-                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        className="w-14 h-14 text-white rounded-lg flex items-center justify-center active:bg-gray-900 transition-transform active:scale-105"
                         onClick={() => handleMove("right")}
                     >
-                        <DPadButton content={"▶"}/>
+                        <DPadButton content={"/dpad-buttons/right.png"}/>
                     </button>
 
                     {/* Row 3 */}
-                    <div></div> {/* Empty Cell */}
+                    <div></div>
                     <button 
-                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        className="w-14 h-14 text-white rounded-lg flex items-center justify-center active:bg-gray-900 transition-transform active:scale-105"
                         onClick={() => handleMove("down")}
                     >
-                        <DPadButton content={"▼"}/>
+                        <DPadButton content={"/dpad-buttons/down.png"}/>
                     </button>
-                    <div></div> {/* Empty Cell */}
+                    <div></div>
                 </div>
 
                 <div>
@@ -328,10 +335,10 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
                     <div></div>
                     <div></div>
                     <button 
-                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        className="w-14 h-14 text-white rounded-lg flex items-center justify-center active:bg-gray-900 transition-transform active:scale-105"
                         onClick={() => setMenuOpen(true)}
                     >
-                        <DPadButton content={"E"}/>
+                        <DPadButton content={"/dpad-buttons/i.png"}/>
                     </button>
                     </div>
                     <div></div>

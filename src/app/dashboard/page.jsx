@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useNakama } from "../providers";
 import { useRouter } from "next/navigation";
+import MemoryCardGame from '@/components/interactive-points'; 
 
 export default function Page() {
   const router = useRouter();
@@ -30,13 +31,50 @@ export default function Page() {
   const [pets, setPets] = useState([]);
 
   const [purchasedItems, setPurchasedItems] = useState({});
+  const [purchasedFood, setPurchasedFood] = useState({});
+  const [purchasedWash, setPurchasedWash] = useState({});
   //handle purchasing for item
-  const handlePurchase = (itemName) => {
-    setPurchasedItems((prevItems) => ({
-      ...prevItems,
-      [itemName]: prevItems[itemName] ? prevItems[itemName] + 1 : 1,
-    }));
+  const handlePurchase = (itemName, category) => {
+    let updatedItems = { ...purchasedItems, [itemName]: (purchasedItems[itemName] || 0) + 1 };
+    localStorage.setItem("purchasedItems", JSON.stringify(updatedItems));
+    setPurchasedItems(updatedItems);
+  
+    if (category === "food") {
+      let updatedFood = { ...purchasedFood, [itemName]: (purchasedFood[itemName] || 0) + 1 };
+      localStorage.setItem("purchasedFood", JSON.stringify(updatedFood));
+      setPurchasedFood(updatedFood);
+    }
+  
+    if (category === "wash") {
+      let updatedWash = { ...purchasedWash, [itemName]: (purchasedWash[itemName] || 0) + 1 };
+      localStorage.setItem("purchasedWash", JSON.stringify(updatedWash));
+      setPurchasedWash(updatedWash);
+    }
   };
+  
+  
+
+  const clearPurchasedItems = () => {
+    // Clear from localStorage
+    localStorage.removeItem("purchasedItems");
+    localStorage.removeItem("purchasedFood");
+    localStorage.removeItem("purchasedWash");
+
+    // Reset state
+    setPurchasedItems({});
+    setPurchasedFood({});
+    setPurchasedWash({});
+  };
+
+  useEffect(() => {
+    const storedFood = JSON.parse(localStorage.getItem("purchasedFood")) || {};
+    const storedWash = JSON.parse(localStorage.getItem("purchasedWash")) || {};
+  
+    setPurchasedFood(storedFood);
+    setPurchasedWash(storedWash);
+  }, [purchasedFood, purchasedWash]);  // ✅ Watches correct state updates
+   // ✅ Runs every time an item is purchased
+  
 
   const loadPets = async () => {
     try {
@@ -60,18 +98,19 @@ export default function Page() {
         throw new Error("No owner data found");
       }
 
-      const owner = await nakama.getOwner(ownerData.address);
+      const result = await nakama.getOwner(ownerData.address);
 
-      console.log("Owner ", owner);
-      if (owner) {
+
+      if (result) {
         setPlayerProfile({
-          address: owner.address,
-          nickname: owner.nickname,
-          joinedAt: new Date(owner.joined_at * 1000).toLocaleDateString(),
-          petCount: owner.pet_count,
-          lastPetTime: owner.last_pet_time
-            ? new Date(owner.last_pet_time * 1000).toLocaleString()
+          address: result.payload.owner.address,
+          nickname: result.payload.owner.nickname,
+          joinedAt: new Date(result.payload.owner.joined_at * 1000).toLocaleDateString(),
+          petCount: result.payload.owner.pet_count,
+          lastPetTime: result.payload.owner.last_pet_time
+            ? new Date(result.payload.owner.last_pet_time * 1000).toLocaleString()
             : "Never",
+          balance: result.payload.owner.balance, // Add this line to include balance
         });
       }
     } catch (error) {
@@ -108,7 +147,7 @@ export default function Page() {
     const initDashboard = async () => {
       try {
         await nakama.authenticate();
-        await getOwner();
+        const result = await getOwner();
         await loadPets();
       } catch (error) {
         console.error("Dashboard initialization failed:", error);
@@ -119,7 +158,7 @@ export default function Page() {
   }, []);
 
   const truncateAddress = (address) => {
-    if (!address) return '';
+    if (!address) return "";
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
@@ -134,7 +173,7 @@ export default function Page() {
             <InteractiveScreen
               currentScreen={currentScreen}
               setCurrentScreen={setCurrentScreen}
-              onPurchase={handlePurchase} 
+              onPurchase={handlePurchase}
             />
           </div>
 
@@ -150,9 +189,10 @@ export default function Page() {
                   height={100}
                   className="rounded-full"
                 />
+                {/* User Profile and Details */}
                 <div>
                   <h2 className="text-2xl font-bold text-[#4b4b4b]">
-                    {playerProfile.nickname}
+                    {playerProfile.nickname || "Unknown"}
                   </h2>
                   <p className="text-md text-gray-600">
                     🏠 Address: {truncateAddress(playerProfile.address)}
@@ -229,11 +269,18 @@ export default function Page() {
                 </div>
               )}
               {currentScreen === "shop" && (
-                
                 <div>
                   <h2 className="text-2xl font-bold text-[#4b4b4b] mb-4 text-center">
-                    Your MetaItem{" "}
+                    Your MetaItem 🛍️
                   </h2>
+
+                  {/* Delete this ltr */}
+                  <button
+                    onClick={clearPurchasedItems}
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                  >
+                    Clear Purchased Items
+                  </button>
 
                   {Object.keys(purchasedItems).length === 0 ? (
                     <p className="text-center text-gray-600">
@@ -257,7 +304,7 @@ export default function Page() {
                               {itemName} x{quantity}
                             </p>
                           </div>
-                        )
+                        ),
                       )}
                     </div>
                   )}
@@ -272,9 +319,22 @@ export default function Page() {
                     You have the following ingredients:
                   </p>
                   <ul className="mt-4 space-y-2">
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">Eggs 🥚</li>
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">Milk 🥛</li>
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">Flour 🌾</li>
+                    {Object.keys(purchasedFood).length > 0 ? (
+                      Object.entries(purchasedFood).map(
+                        ([foodName, quantity], index) => (
+                          <li
+                            key={index}
+                            className="p-3 bg-[#F4F4F4] rounded-md"
+                          >
+                            {foodName} x{quantity}
+                          </li>
+                        ),
+                      )
+                    ) : (
+                      <p className="text-gray-500">
+                        Your kitchen is empty. Buy some food!
+                      </p>
+                    )}
                   </ul>
                 </div>
               )}
@@ -287,15 +347,22 @@ export default function Page() {
                     Check your Metamon Hygiene status:
                   </p>
                   <ul className="mt-4 space-y-2">
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">
-                      Soap: Full 🧼
-                    </li>
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">
-                      Shampoo: Half Left 🛁
-                    </li>
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">
-                      Toothpaste: New Tube! 🦷
-                    </li>
+                    {Object.keys(purchasedWash).length > 0 ? (
+                      Object.entries(purchasedWash).map(
+                        ([washItem, quantity], index) => (
+                          <li
+                            key={index}
+                            className="p-3 bg-[#F4F4F4] rounded-md"
+                          >
+                            {washItem} x{quantity}
+                          </li>
+                        ),
+                      )
+                    ) : (
+                      <p className="text-gray-500">
+                        Your bathroom is empty. Buy some wash items!
+                      </p>
+                    )}
                   </ul>
                 </div>
               )}
@@ -306,15 +373,13 @@ export default function Page() {
                     🎮 Game Room
                   </h2>
                   <p className="mt-2 text-gray-600">Your available games:</p>
+                
                   <ul className="mt-4 space-y-2">
                     <li className="p-3 bg-[#F4F4F4] rounded-md">
-                      Retro Racing 🏎️
+                      Memory Game 🧩{" "}                      
                     </li>
                     <li className="p-3 bg-[#F4F4F4] rounded-md">
-                      Puzzle Kingdom 🧩
-                    </li>
-                    <li className="p-3 bg-[#F4F4F4] rounded-md">
-                      Battle Arena ⚔️
+                      Test your reaction speed 🏎️
                     </li>
                   </ul>
                 </div>
