@@ -5,9 +5,6 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useNakama } from "../providers";
 import { useRouter } from "next/navigation";
-import foodItems from "@/data/foodItems";
-
-import ShopMenu from "@/components/interactive-points";
 
 export default function Page() {
   const router = useRouter();
@@ -131,9 +128,9 @@ export default function Page() {
       {/* Wrapper */}
       <div className="flex min-h-screen bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA]">
         {/* Center Container */}
-        <div className="container mx-auto flex items-center justify-center gap-6 px-6">
+        <div className="container mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 px-6">
           {/* Left Column - Map */}
-          <div className="w-full">
+          <div className="order-2 w-full lg:order-1">
             <InteractiveScreen
               currentScreen={currentScreen}
               setCurrentScreen={setCurrentScreen}
@@ -142,7 +139,7 @@ export default function Page() {
           </div>
 
           {/* Right Column - Profile & Stats Cards */}
-          <div className="w-full flex flex-col gap-6">
+          <div className="w-full flex flex-col gap-6 order-1 lg:order-2">
             {/* Top Profile Card */}
             <div className="p-4 bg-white rounded-lg shadow-lg border-8 border-[#A8E6CF]">
               <div className="flex items-center space-x-6">

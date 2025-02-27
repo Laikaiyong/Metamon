@@ -76,7 +76,7 @@ export default function Home() {
       };
       localStorage.setItem("ownerData", JSON.stringify(storageData));
 
-      router.push("/full");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Create Owner Error:", error);
       alert("Failed to create owner. Please try again.");

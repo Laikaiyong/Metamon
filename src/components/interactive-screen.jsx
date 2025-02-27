@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import InteractivePoints from "./interactive-points";
+import DPadButton from "./dpad-button";
 
 const screenData = {
     openMap: {
@@ -133,9 +134,21 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
     const numCols = tileMap[0].length;
 
     // Dynamic Tile Size
-    const [tileSize, setTileSize] = useState(
-        Math.min(600 / numCols, 600 / numRows)
-    );
+    const [tileSize, setTileSize] = useState(0);
+
+    useEffect(() => {
+        const updateTileSize = () => {
+            const container = document.querySelector('.game-container');
+            if (container) {
+                const containerWidth = container.clientWidth;
+                setTileSize(Math.min(containerWidth / numCols, containerWidth / numRows));
+            }
+        };
+
+        updateTileSize();
+        window.addEventListener('resize', updateTileSize);
+        return () => window.removeEventListener('resize', updateTileSize);
+    }, [numCols, numRows]);
 
     // Handle open menu when on interactive point
     useEffect(() => {
@@ -166,6 +179,41 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
     useEffect(() => {
         setPosition(screenData[currentScreen].spawnPosition);
     }, [currentScreen]);
+
+    const handleMove = (direction) => {
+            let newRow = position.row;
+            let newCol = position.col;
+        
+            switch (direction) {
+                case "up": if (newRow > 0 && tileMap[newRow - 1][newCol] !== 0) newRow--; break;
+                case "down": if (newRow < numRows - 1 && tileMap[newRow + 1][newCol] !== 0) newRow++; break;
+                case "left": if (newCol > 0 && tileMap[newRow][newCol - 1] !== 0) newCol--; break;
+                case "right": if (newCol < numCols - 1 && tileMap[newRow][newCol + 1] !== 0) newCol++; break;
+                default: return;
+            }
+        
+            const key = `${newRow}-${newCol}`;
+            const newMapData = screenData[currentScreen]?.mapChanges[key];
+        
+            if (newMapData) {
+                setCurrentScreen(newMapData.targetMap);
+                setTimeout(() => {
+                    setPosition(newMapData.spawnPosition);
+                }, 0);
+            } else {
+                setPosition({ row: newRow, col: newCol });
+            }
+        
+            const interactivePoint = screenData[currentScreen]?.interactivePoints?.[key];
+        
+            if (interactivePoint) {
+                setShowPrompt(true);
+                setCurrentMenu(interactivePoint.menu);
+            } else {
+                setShowPrompt(false);
+                setCurrentMenu(null);
+            }
+    };
 
     // Movement and Map Change
     useEffect(() => {
@@ -211,16 +259,15 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
     return (
         <>
             {/* Game Screen */}
-            <div 
-                className="relative w-[600px] h-[600px] border-8 border-[#A8E6CF] bg-cover"
+            <div className="relative w-full aspect-square max-w-[600px] border-8 border-[#A8E6CF] bg-cover bg-center game-container"
                 style={{ backgroundImage: `url(${screenData[currentScreen]?.background})` }}
             >
                 <Image 
                     src="/hooman.png" 
                     alt="Metamon" 
                     width={tileSize} 
-                    height={tileSize} 
-                    style={{ position: "absolute", top: `${position.row * tileSize}px`, left: `${position.col * tileSize}px` }} 
+                    height={tileSize}
+                    style={{ position: "absolute", top: `${position.row * tileSize}px`, left: `${position.col * tileSize}px`, maxWidth: '100%', objectFit: 'contain' }} 
                 />
                 
                 {/* Interaction Prompt */}
@@ -235,6 +282,64 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
             {menuOpen && currentMenu && (
                 <InteractivePoints menuType={currentMenu} onClose={() => setMenuOpen(false)} onPurchase={onPurchase} />
             )}
+
+        {/* Mobile D-Pad Controls - 3x3 Grid Layout + Interactive Button*/}
+        <div className="flex justify-between items-center lg:hidden">
+                <div className="grid grid-cols-3 gap-2 w-40 mt-6">
+                    {/* Row 1 */}
+                    <div></div> {/* Empty Cell */}
+                    <button
+                        onClick={() => handleMove("up")}
+                    >
+                        <DPadButton content={"▲"}/>
+                    </button>
+                    <div></div> {/* Empty Cell */}
+
+                    {/* Row 2 */}
+                    <button 
+                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        onClick={() => handleMove("left")}
+                    >
+                        <DPadButton content={"◀"}/>
+                    </button>
+                    <div></div> {/* Empty Cell (Center of Grid) */}
+                    <button 
+                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        onClick={() => handleMove("right")}
+                    >
+                        <DPadButton content={"▶"}/>
+                    </button>
+
+                    {/* Row 3 */}
+                    <div></div> {/* Empty Cell */}
+                    <button 
+                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        onClick={() => handleMove("down")}
+                    >
+                        <DPadButton content={"▼"}/>
+                    </button>
+                    <div></div> {/* Empty Cell */}
+                </div>
+
+                <div>
+                    <div className="grid grid-cols-3 gap-2 w-40 mt-6">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <button 
+                        className="w-14 h-14 bg-gray-700 text-white rounded-lg flex items-center justify-center active:bg-gray-900"
+                        onClick={() => setMenuOpen(true)}
+                    >
+                        <DPadButton content={"E"}/>
+                    </button>
+                    </div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+        </div>
         </>
     );
 }

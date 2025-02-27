@@ -13,7 +13,7 @@ import Image from "next/image";
 
 export default function InteractivePoints({ menuType, onClose, onPurchase }) {
   const menus = {
-    kichenMenu: <KitchenMenu onClose={onClose} />,
+    kitchenMenu: <KitchenMenu onClose={onClose} />,
     shopMenu: <ShopMenu onClose={onClose} onPurchase={onPurchase} />,
     bathroomMenu: <BathroomMenu onClose={onClose} />,
     gameRoomMenu: <GameRoomMenu onClose={onClose} />,
@@ -262,9 +262,55 @@ const BathroomMenu = ({ onClose }) => {
   );
 };
 
-const KitchenMenu = ({ onClose }) => {};
+const KitchenMenu = ({ onClose }) => {
+  return (
+    <>
+      <div className="flex items-center justify-center bg-opacity-50">
+        <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[1000px] h-auto">
+          <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-6 py-2 rounded-md shadow-md text-white font-bold text-lg">
+              Welcome to The Kitchen!
+          </div>
 
-const GameRoomMenu = ({ onClose }) => {};
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
+            ✖
+          </button>
+        </div>
+      </div>
+    </>
+  )
+};
+
+const GameRoomMenu = ({ onClose }) => {
+  return (
+    <>
+      <div className="flex items-center justify-center bg-opacity-50">
+        <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[1000px] h-[600px] flex flex-col items-center">
+          {/* Decorative Header */}
+          <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-6 py-2 rounded-md shadow-md text-white font-bold text-lg">
+            Welcome to Metagame!
+          </div>
+
+          <div className="p-4 m-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[150px] flex flex-col items-center">
+            <p className="text-center text-[#5D4037] font-semibold text-lg">
+             Choose a game!
+            </p>
+           
+          </div>
+
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
+            ✖
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
 
 const EggRoomMenu = ({ onClose }) => {
   const [selectedEgg, setSelectedEgg] = useState(null);
