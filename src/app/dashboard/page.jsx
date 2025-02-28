@@ -395,7 +395,7 @@ export default function Page() {
               {currentScreen === "shop" && (
                 <div>
                   <h2 className="text-2xl font-bold text-[#4b4b4b] mb-4 text-center">
-                    Your MetaItem 🛍️
+                    MetaItem Shop 🛍️
                   </h2>
 
                   {inventoryLoading ? (
@@ -406,7 +406,7 @@ export default function Page() {
                       (category) => itemInventory[category].length === 0
                     ) ? (
                     <p className="text-center text-gray-600">
-                      You haven't purchased any items yet.
+                      Buy stuff for your Metamons.
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 gap-6 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[350px] overflow-y-auto">

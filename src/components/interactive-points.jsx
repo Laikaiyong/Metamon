@@ -43,6 +43,7 @@ const ShopMenu = ({ onClose, onPurchase }) => {
   const [category, setCategory] = useState("food");
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState(null);
+  const [appleCount, setAppleCount] = useState(9);
   const nakama = useNakama();
 
   const handlePurchase = async (item) => {
@@ -61,6 +62,10 @@ const ShopMenu = ({ onClose, onPurchase }) => {
             const response = await nakama.purchaseItem(item);
             if (response) {
               await nakama.updateBalance(-Number(item.price))
+              // Increment apple count on successful purchase
+              if (item.name === "Apple") {
+                setAppleCount(prevCount => prevCount + 1);
+              }
               alert(`Successfully purchased ${item.name}!`);
             }
         } else {
@@ -74,8 +79,12 @@ const ShopMenu = ({ onClose, onPurchase }) => {
       setPurchasing(false);
     }
   };
+
   const categories = {
-    food: foodItems,
+    food: foodItems.map(item => ({
+      ...item,
+      amount: item.name === "Apple" ? appleCount : item.amount // Update apple amount dynamically
+    })),
     wash: washItems,
   };
 
@@ -83,7 +92,7 @@ const ShopMenu = ({ onClose, onPurchase }) => {
     <>
       <div className="flex items-center justify-center bg-opacity-50">
         <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[1000px] h-[600px] flex flex-col items-center">
-          {/* Decorative Header */}
+          {/* Rest of your component remains the same */}
           <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-6 py-2 rounded-md shadow-md text-white font-bold text-lg">
             Welcome to Metashop!
           </div>
@@ -92,8 +101,6 @@ const ShopMenu = ({ onClose, onPurchase }) => {
             <p className="text-center text-[#5D4037] font-semibold text-lg">
               Buy something for your Metamon!
             </p>
-            {/* Add category : one for food, one for wash item, one for game item */}
-            {/* Category Selection Buttons */}
             <div className="flex space-x-4 my-4">
               <button
                 className={`px-4 py-2 rounded-md font-semibold shadow-md transition-all ${
@@ -116,7 +123,6 @@ const ShopMenu = ({ onClose, onPurchase }) => {
             </div>
           </div>
 
-          {/* Item Grid Display */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[350px] overflow-y-auto">
             {error && (
               <p className="text-red-500 text-center col-span-2">{error}</p>
@@ -134,7 +140,7 @@ const ShopMenu = ({ onClose, onPurchase }) => {
                     height={80}
                   />
                   <p className="text-[#5D4037] text-lg font-semibold mt-2">
-                    {item.name}
+                    {item.name} {item.name === "Apple" ? `(${appleCount})` : `(${item.amount})`}
                   </p>
                   <div className="flex items-center space-x-2 mt-2">
                     <span className="bg-[#D4B483] text-white px-3 py-1 rounded-lg shadow-md">
@@ -161,7 +167,6 @@ const ShopMenu = ({ onClose, onPurchase }) => {
             )}
           </div>
 
-          {/* Close Button */}
           <button
             onClick={onClose}
             className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
@@ -182,6 +187,7 @@ const BathroomMenu = ({ onClose }) => {
   const [petsId, setPetsId] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [amount, setAmount ] = useState(10);
 
   const nakama = useNakama(); // Get Nakama API instance
 
@@ -221,6 +227,7 @@ const BathroomMenu = ({ onClose }) => {
 
     if (cleanliness < 100) {
       setIsWashing(true);
+      setAmount(amount - 1);
       setTimeout(async () => {
         setCleanliness((prev) => {
           const newCleanliness = Math.min(
@@ -365,7 +372,7 @@ const BathroomMenu = ({ onClose }) => {
                     height={80}
                   />
                   <p className="text-[#5D4037] text-lg font-semibold mt-2">
-                    {item.name}
+                    {item.name} <span>{index === 0 ? amount : item.amount}</span>
                   </p>
                   <button
                     onClick={() => handleWash(item)}
@@ -399,6 +406,7 @@ const KitchenMenu = ({ onClose, foodItems }) => {
   const [petsId, setPetsId] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [amount, setAmount ] = useState(10);
 
   const nakama = useNakama(); // Get Nakama API instance
 
@@ -433,6 +441,7 @@ const KitchenMenu = ({ onClose, foodItems }) => {
     setHunger((prev) => Math.max((prev || 0) - food.hungerReduction, 0));
     setEatingFood(food.name);
     setIsEating(true);
+    setAmount(amount - 1);
 
     // Added code for carePet function
     try {
@@ -546,7 +555,7 @@ const KitchenMenu = ({ onClose, foodItems }) => {
                     height={80}
                   />
                   <p className="text-[#5D4037] text-lg font-semibold mt-2">
-                    {item.name}
+                    {item.name} <span>{index === 0 ? amount : item.amount}</span>
                   </p>
                   <button
                     onClick={() => handleFeed(item)}
@@ -592,20 +601,72 @@ const EvolveModal = ({ onClose }) => {
   );
 };
 const GameRoomMenu = ({ onClose }) => { 
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [selectedPetId, setSelectedPetId] = useState(null);
+  const [pets, setPets] = useState([]);
+  const [petsId, setPetsId] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [happiness, setHappiness] = useState(0);
   const [showEvolveModal, setShowEvolveModal] = useState(false);
-  
-  
+
   const nakama = useNakama();
-  const handleGameCompletion = (score) => {
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setLoading(true);
+        await nakama.authenticate();
+        const owner = JSON.parse(localStorage.getItem("ownerData"));
+
+        // Fetch pets from backend
+        const petsData = await nakama.getOwnerPets(owner.address);
+        setPets(petsData.payload.pets || []);
+        setPetsId(petsData.payload.petsId || []);
+      } catch (err) {
+        console.error("Error fetching pets:", err);
+        setError("Failed to load pets. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, []);
+
+  const handleGameCompletion = async (score) => {
+    if (!selectedPetId) return;
+
     const newHappiness = Math.min(happiness + score, 100);
     setHappiness(newHappiness);
     setSelectedGame(null); 
 
+    // Call carePet when a game is played
+    try {
+      await nakama.carePet(selectedPetId, "play");
+      console.log(`Cared for ${selectedPet.dna.species} with play action`);
+    } catch (error) {
+      console.error("Failed to update pet care:", error);
+    }
+
     // 🦊✨ Show evolve modal when happiness reaches 100
     if (newHappiness === 100) {
       setShowEvolveModal(true);
+    }
+  };
+
+  const handleEvolvePet = async () => {
+    if (!selectedPetId) return;
+
+    try {
+      await nakama.evolvePet(selectedPetId);
+      console.log(`Evolved ${selectedPet.dna.species}!`);
+      alert(`Your ${selectedPet.dna.species} has evolved!`);
+    } catch (error) {
+      console.error("Failed to evolve pet:", error);
+    } finally {
+      setShowEvolveModal(false);
     }
   };
 
@@ -617,87 +678,105 @@ const GameRoomMenu = ({ onClose }) => {
           🎮 Time for Game!
         </div>
 
-        {/* Happiness Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-6 mt-4">
-          <div className="bg-green-500 h-6 rounded-full transition-all duration-500" style={{ width: `${happiness}%` }}></div>
-        </div>
-        <p className="text-center text-[#5D4037] font-semibold">Happiness: {happiness}%</p>
-
-        {/* Game Selection */}
-        {selectedGame === null ? (
+        {/* Pet Selection */}
+        {!selectedPet ? (
           <>
             <div className="p-4 m-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full flex flex-col items-center">
               <p className="text-center text-[#5D4037] font-semibold text-lg">
-                Select a game for Metamon!
+                Select a pet to play games! 🐾
               </p>
-              <Image
-                src="/gacha2/rare/fox/2.png"
-                alt="Metamon"
-                width={100}
-                height={100}
-                className="mt-2"
-              />
             </div>
 
-            <div className="w-full bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner p-4">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Memory Card Game */}
-                <div className="flex flex-col items-center p-4 border-[3px] border-[#D4B483] bg-[#FDF6E3] rounded-lg shadow-md">
-                  <Image
-                    src="/game-items/memory-card-game.png"
-                    alt="Memory Game"
-                    width={80}
-                    height={80}
-                  />
-                  <p className="text-[#5D4037] font-semibold mt-2">
-                    Memory Card Game
-                  </p>
-                  <button
-                    onClick={() => setSelectedGame("memory")}
-                    className="mt-2 bg-[#FFAAA5] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
-                    🧠 Play
-                  </button>
-                </div>
+            {loading && <p className="text-center text-gray-600">Loading pets...</p>}
+            {error && <p className="text-center text-red-500">{error}</p>}
 
-                {/* Catch the Falling Items */}
-                <div className="flex flex-col items-center p-4 border-[3px] border-[#D4B483] bg-[#FDF6E3] rounded-lg shadow-md">
-                  <Image
-                    src="/game-items/arcade-machine.png"
-                    alt="Catch Game"
-                    width={80}
-                    height={80}
-                  />
-                  <p className="text-[#5D4037] font-semibold mt-2">
-                    Catch the Falling Items
-                  </p>
-                  <button
-                    onClick={() => setSelectedGame("catch")}
-                    className="mt-2 bg-[#FFD700] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
-                    🍎 Play
-                  </button>
-                </div>
+            {!loading && pets.length > 0 ? (
+              <div className="grid grid-cols-3 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[400px] overflow-y-auto">
+                {pets.map((pet, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform cursor-pointer"
+                    onClick={() => {
+                      setSelectedPet(pet);
+                      setSelectedPetId(petsId[index]);
+                    }}>
+                    <Image
+                      src={`/gacha2/${pet.dna.rarity}/${pet.dna.species}/1.png`}
+                      alt={pet.dna.species}
+                      width={80}
+                      height={80}
+                    />
+                    <p className="text-[#5D4037] text-lg font-semibold mt-2">
+                      {pet.dna.species}
+                    </p>
+                    <button className="mt-2 bg-[#D4B483] text-white px-4 py-2 rounded-lg shadow-md">
+                      Select
+                    </button>
+                  </div>
+                ))}
               </div>
-            </div>
+            ) : (
+              !loading && <p className="text-center text-gray-600">No pets found.</p>
+            )}
           </>
-        ) : selectedGame === "memory" ? (
-          <MemoryCardGame onExit={handleGameCompletion} />
         ) : (
-          <CatchFallingItemsGame onExit={handleGameCompletion} />
+          <>
+            {/* Happiness Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-6 mt-4">
+              <div className="bg-green-500 h-6 rounded-full transition-all duration-500" style={{ width: `${happiness}%` }}></div>
+            </div>
+            <p className="text-center text-[#5D4037] font-semibold">Happiness: {happiness}%</p>
+
+            {/* Game Selection */}
+            {selectedGame === null ? (
+              <>
+                <div className="p-4 m-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full flex flex-col items-center">
+                  <p className="text-center text-[#5D4037] font-semibold text-lg">
+                    Select a game for {selectedPet.dna.species}!
+                  </p>
+                  <Image
+                    src={`/gacha2/${selectedPet.dna.rarity}/${selectedPet.dna.species}/1.png`}
+                    alt="Metamon"
+                    width={100}
+                    height={100}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="w-full bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Memory Card Game */}
+                    <div className="flex flex-col items-center p-4 border-[3px] border-[#D4B483] bg-[#FDF6E3] rounded-lg shadow-md">
+                      <Image src="/game-items/memory-card-game.png" alt="Memory Game" width={80} height={80} />
+                      <p className="text-[#5D4037] font-semibold mt-2">Memory Card Game</p>
+                      <button onClick={() => setSelectedGame("memory")} className="mt-2 bg-[#FFAAA5] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
+                        🧠 Play
+                      </button>
+                    </div>
+
+                    {/* Catch the Falling Items */}
+                    <div className="flex flex-col items-center p-4 border-[3px] border-[#D4B483] bg-[#FDF6E3] rounded-lg shadow-md">
+                      <Image src="/game-items/arcade-machine.png" alt="Catch Game" width={80} height={80} />
+                      <p className="text-[#5D4037] font-semibold mt-2">Catch the Falling Items</p>
+                      <button onClick={() => setSelectedGame("catch")} className="mt-2 bg-[#FFD700] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
+                        🍎 Play
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : selectedGame === "memory" ? (
+              <MemoryCardGame onExit={handleGameCompletion} />
+            ) : (
+              <CatchFallingItemsGame onExit={handleGameCompletion} />
+            )}
+          </>
         )}
-
-        {/* Evolve Modal (Only Show When Happiness is 100) */}
-        {showEvolveModal && <EvolveModal onClose={() => setShowEvolveModal(false)} />}
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
-          ✖
-        </button>
       </div>
     </div>
   );
 };
+
 
 
 const MemoryCardGame = ({ onExit }) => {
