@@ -1,3 +1,6 @@
+Video Pitch Link:
+https://www.loom.com/share/426ebaa346a442c68da1be2f34497590?sid=e9f9a2c3-158c-465f-923d-e89fbf6988e5
+
 # Starter Game Template
 
 This repository contains a starter World Engine project that you can use as a scaffold for your project.
