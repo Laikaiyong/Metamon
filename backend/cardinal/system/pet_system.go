@@ -5,6 +5,7 @@ import (
 	"metamon/msg"
 	"time"
 
+	"golang.org/x/exp/rand"
 	"pkg.world.dev/world-engine/cardinal"
 	"pkg.world.dev/world-engine/cardinal/filter"
 	"pkg.world.dev/world-engine/cardinal/types"
@@ -18,9 +19,9 @@ const (
 )
 
 const (
-	FeedBonus         = 25
-	PlayBonus         = 20
-	CleanBonus        = 30
+	FeedBonus         = 5
+	PlayBonus         = 5
+	CleanBonus        = 5
 	ExperiencePerCare = 10
 )
 
@@ -136,4 +137,51 @@ func updatePetState(state *comp.State) {
 	state.Energy = max(0, state.Energy-1)
 	state.Hygiene = max(0, state.Hygiene-1)
 	state.Age++
+}
+
+func PassiveDecaySystem(world cardinal.WorldContext) error {
+	return cardinal.EachMessage[msg.PassiveDecayMsg, msg.PassiveDecayResult](
+		world,
+		func(decay cardinal.TxData[msg.PassiveDecayMsg]) (msg.PassiveDecayResult, error) {
+			stateChanges := make(map[string]int)
+
+			// Find all pets owned by the user
+			err := cardinal.NewSearch().Entity(
+				filter.Exact(filter.Component[comp.Pet]())).
+				Each(world, func(id types.EntityID) bool {
+					pet, err := cardinal.GetComponent[comp.Pet](world, id)
+					if err != nil {
+						return true
+					}
+
+					if pet.Owner.Address != decay.Msg.OwnerAddress {
+						return true
+					}
+
+					// Random decrease between 1-5 for each stat
+					hungerDec := rand.Intn(5) + 1
+					happinessDec := rand.Intn(5) + 1
+					hygieneDec := rand.Intn(5) + 1
+
+					pet.State.Hunger = max(0, pet.State.Hunger-hungerDec)
+					pet.State.Happiness = max(0, pet.State.Happiness-happinessDec)
+					pet.State.Hygiene = max(0, pet.State.Hygiene-hygieneDec)
+
+					cardinal.SetComponent(world, id, pet)
+
+					totalDecrease := hungerDec + happinessDec + hygieneDec
+					stateChanges[string(id)] = totalDecrease
+
+					return true
+				})
+
+			if err != nil {
+				return msg.PassiveDecayResult{Success: false}, err
+			}
+
+			return msg.PassiveDecayResult{
+				Success: true,
+				States:  stateChanges,
+			}, nil
+		})
 }

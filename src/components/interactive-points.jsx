@@ -2,9 +2,9 @@
 
 import foodItems from "@/data/foodItems";
 import washItems from "@/data/washItems"; // Sample wash items
-import gameItems from "@/data/gameItems";
 import eggsData from "@/data/eggsData";
 import petData from "@/data/petData";
+import gameItems from "@/data/gameItems";
 import { useState, useEffect } from "react";
 
 import { useNakama } from "@/app/providers";
@@ -13,16 +13,11 @@ import Image from "next/image";
 
 export default function InteractivePoints({ menuType, onClose, onPurchase }) {
   const menus = {
-    kitchenMenu: (
-      <KitchenMenu
-        onClose={onClose}
-        foodItems={foodItems}
-      />
-    ),
+    kitchenMenu: <KitchenMenu onClose={onClose} foodItems={foodItems} />,
     shopMenu: <ShopMenu onClose={onClose} onPurchase={onPurchase} />,
     bathroomMenu: <BathroomMenu onClose={onClose} />,
     gameRoomMenu: <GameRoomMenu onClose={onClose} />,
-    eggRoomMenu: <EggRoomMenu onClose={onClose} />,
+    eggRoomMenu: <EggRoomMenu onClose={onClose} onPurchase={onPurchase} />,
     petRoomMenu: <PetRoomMenu onClose={onClose} />,
   };
 
@@ -46,11 +41,42 @@ export default function InteractivePoints({ menuType, onClose, onPurchase }) {
 
 const ShopMenu = ({ onClose, onPurchase }) => {
   const [category, setCategory] = useState("food");
+  const [purchasing, setPurchasing] = useState(false);
+  const [error, setError] = useState(null);
+  const nakama = useNakama();
 
+  const handlePurchase = async (item) => {
+    try {
+      setPurchasing(true);
+      setError(null);
+
+      await nakama.authenticate();
+      const owner = JSON.parse(localStorage.getItem("ownerData"));
+      const result = await nakama.getOwner(owner.address);
+
+      if (result) {
+        const newBalance = result.payload.owner.balance;
+  
+        if (newBalance >= item.price) {
+            const response = await nakama.purchaseItem(item);
+            if (response) {
+              await nakama.updateBalance(-Number(item.price))
+              alert(`Successfully purchased ${item.name}!`);
+            }
+        } else {
+          alert("Not enough tokens to purchase eggs, PLEASE SWAP")
+        }
+      };
+    } catch (err) {
+      console.error("Purchase error:", err);
+      setError("Failed to purchase item. Please try again.");
+    } finally {
+      setPurchasing(false);
+    }
+  };
   const categories = {
     food: foodItems,
     wash: washItems,
-    game: gameItems,
   };
 
   return (
@@ -70,34 +96,32 @@ const ShopMenu = ({ onClose, onPurchase }) => {
             {/* Category Selection Buttons */}
             <div className="flex space-x-4 my-4">
               <button
-                className={`px-4 py-2 rounded-md font-semibold shadow-md transition-all ${category === "food"
+                className={`px-4 py-2 rounded-md font-semibold shadow-md transition-all ${
+                  category === "food"
                     ? "bg-[#D4B483] text-white"
                     : "bg-[#FAF3E0] text-[#5D4037]"
-                  }`}
+                }`}
                 onClick={() => setCategory("food")}>
                 🍎 Food
               </button>
               <button
-                className={`px-4 py-2 rounded-md font-semibold shadow-md transition-all ${category === "wash"
+                className={`px-4 py-2 rounded-md font-semibold shadow-md transition-all ${
+                  category === "wash"
                     ? "bg-[#D4B483] text-white"
                     : "bg-[#FAF3E0] text-[#5D4037]"
-                  }`}
+                }`}
                 onClick={() => setCategory("wash")}>
                 🧼 Wash Items
-              </button>
-              <button
-                className={`px-4 py-2 rounded-md font-semibold shadow-md transition-all ${category === "game"
-                    ? "bg-[#D4B483] text-white"
-                    : "bg-[#FAF3E0] text-[#5D4037]"
-                  }`}
-                onClick={() => setCategory("game")}>
-                🎮 Game Items
               </button>
             </div>
           </div>
 
           {/* Item Grid Display */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[350px] overflow-y-auto">
+            {error && (
+              <p className="text-red-500 text-center col-span-2">{error}</p>
+            )}
+
             {categories[category].length > 0 ? (
               categories[category].map((item, index) => (
                 <div
@@ -117,9 +141,15 @@ const ShopMenu = ({ onClose, onPurchase }) => {
                       {item.price} 🪙
                     </span>
                     <button
-                      onClick={() => onPurchase(item.name)}
-                      className="bg-[#FFAAA5] text-white px-3 py-1 rounded-lg shadow-md hover:scale-105 transition-transform">
-                      Buy
+                      onClick={() => handlePurchase(item)}
+                      disabled={purchasing}
+                      className={`bg-[#FFAAA5] text-white px-3 py-1 rounded-lg shadow-md 
+                      ${
+                        purchasing
+                          ? "opacity-50 cursor-not-allowed"
+                          : "hover:scale-105 transition-transform"
+                      }`}>
+                      {purchasing ? "Buying..." : "Buy"}
                     </button>
                   </div>
                 </div>
@@ -143,126 +173,6 @@ const ShopMenu = ({ onClose, onPurchase }) => {
   );
 };
 
-// const BathroomMenu = ({ onClose }) => {
-//   const [cleanliness, setCleanliness] = useState(0);
-//   const [isWashing, setIsWashing] = useState(false);
-
-//   // Fix: Ensure cleanliness value is valid
-//   const handleWash = (item) => {
-//     if (typeof cleanliness !== "number") {
-//       setCleanliness(0); // Reset to prevent NaN
-//     }
-
-//     if (cleanliness < 100) {
-//       setIsWashing(true);
-//       setTimeout(() => {
-//         setCleanliness((prev) => {
-//           const newCleanliness = Math.min(
-//             (prev || 0) + item.cleanlinessBoost,
-//             100
-//           );
-//           return isNaN(newCleanliness) ? 0 : newCleanliness; // Ensure it's never NaN
-//         });
-//         setIsWashing(false);
-//       }, 800);
-//     }
-//   };
-
-//   return (
-//     <>
-//       <div className="flex items-center justify-center bg-opacity-50">
-//         <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[1000px] h-[550px] flex flex-col items-center">
-//           {/* Decorative Header */}
-//           <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-6 py-2 rounded-md shadow-md text-white font-bold text-lg">
-//             🛁 Time to Wash Metamon!
-//           </div>
-
-//           {/* Metamon Display */}
-//           <div className="p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[150px] flex flex-col items-center justify-center relative">
-//             <p className="text-center text-[#5D4037] font-semibold text-lg">
-//               Your Metamon needs a bath! 🧼
-//             </p>
-
-//             {/* Metamon Images */}
-//             <div className="relative mt-2">
-//               <Image
-//                 src="/gacha2/rare/fox/1.png"
-//                 alt="Dirty Metamon"
-//                 width={100}
-//                 height={100}
-//                 className={cleanliness === 100 ? "hidden" : "block"}
-//               />
-//               <Image
-//                 src="/gacha2/rare/fox/2.png"
-//                 alt="Clean Metamon"
-//                 width={100}
-//                 height={100}
-//                 className={cleanliness === 100 ? "block" : "hidden"}
-//               />
-
-//               {/* Water Splash Animation */}
-//               {isWashing && (
-//                 <div className="absolute inset-0 flex justify-center items-center animate-bounce">
-//                   <Image
-//                     src="/animation-effects/water-splash.gif"
-//                     alt="Water Splash"
-//                     width={400}
-//                     height={400}
-//                   />
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-
-//           {/* Cleanliness Progress Bar */}
-//           <div className="w-full mt-4">
-//             <div className="bg-gray-300 w-[80%] h-6 rounded-full overflow-hidden mx-auto">
-//               <div
-//                 className="bg-[#5DADE2] h-full transition-all duration-500"
-//                 style={{ width: `${cleanliness || 0}%` }}></div>
-//             </div>
-//             <p className="text-center text-[#3B4D61] mt-2">
-//               Cleanliness: {cleanliness || 0}%
-//             </p>
-//           </div>
-
-//           {/* Wash Items Grid Layout */}
-//           <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[300px] overflow-y-auto">
-//             {washItems.map((item, index) => (
-//               <div
-//                 key={index}
-//                 className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform">
-//                 <Image
-//                   src={item.image}
-//                   alt={item.name}
-//                   width={80}
-//                   height={80}
-//                 />
-//                 <p className="text-[#5D4037] text-lg font-semibold mt-2">
-//                   {item.name}
-//                 </p>
-//                 <div className="flex items-center space-x-2 mt-2">
-//                   <button
-//                     onClick={() => handleWash(item)}
-//                     className="bg-[#FFAAA5] text-white px-3 py-1 rounded-lg shadow-md hover:scale-110 transition-transform">
-//                     Use
-//                   </button>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-
-//           {/* Close Button */}
-//           <button
-//             onClick={onClose}
-//             className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
-//             ✖
-//           </button>
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
 const BathroomMenu = ({ onClose }) => {
   const [selectedPet, setSelectedPet] = useState(null);
   const [selectedPetId, setSelectedPetId] = useState(null);
@@ -286,6 +196,8 @@ const BathroomMenu = ({ onClose }) => {
         const petsData = await nakama.getOwnerPets(owner.address);
         setPets(petsData.payload.pets || []);
         setPetsId(petsData.payload.petsId || []);
+        const itemData = await nakama.getOwnerItems(owner.address);
+        console.log(itemData);
       } catch (err) {
         console.error("Error fetching pets:", err);
         setError("Failed to load pets. Please try again.");
@@ -311,7 +223,10 @@ const BathroomMenu = ({ onClose }) => {
       setIsWashing(true);
       setTimeout(async () => {
         setCleanliness((prev) => {
-          const newCleanliness = Math.min((prev || 0) + item.cleanlinessBoost, 100);
+          const newCleanliness = Math.min(
+            (prev || 0) + item.cleanlinessBoost,
+            100
+          );
           return isNaN(newCleanliness) ? 0 : newCleanliness; // Ensure it's never NaN
         });
 
@@ -346,7 +261,9 @@ const BathroomMenu = ({ onClose }) => {
             </div>
 
             {/* Show loading state */}
-            {loading && <p className="text-center text-gray-600">Loading pets...</p>}
+            {loading && (
+              <p className="text-center text-gray-600">Loading pets...</p>
+            )}
 
             {/* Show error message if failed to load */}
             {error && <p className="text-center text-red-500">{error}</p>}
@@ -362,8 +279,7 @@ const BathroomMenu = ({ onClose }) => {
                       setSelectedPet(pet);
                       setSelectedPetId(petsId[index]);
                       setCleanliness(50); // Assume pet starts with some cleanliness level
-                    }}
-                  >
+                    }}>
                     <Image
                       src={`/gacha2/${pet.dna.rarity}/${pet.dna.species}/1.png`}
                       alt={pet.dna.species}
@@ -380,7 +296,9 @@ const BathroomMenu = ({ onClose }) => {
                 ))}
               </div>
             ) : (
-              !loading && <p className="text-center text-gray-600">No pets found.</p>
+              !loading && (
+                <p className="text-center text-gray-600">No pets found.</p>
+              )
             )}
           </>
         ) : (
@@ -425,7 +343,9 @@ const BathroomMenu = ({ onClose }) => {
             {/* Cleanliness Progress Bar */}
             <div className="w-full mt-4">
               <div className="bg-gray-300 w-[80%] h-6 rounded-full overflow-hidden mx-auto">
-                <div className="bg-[#5DADE2] h-full transition-all duration-500" style={{ width: `${cleanliness}%` }}></div>
+                <div
+                  className="bg-[#5DADE2] h-full transition-all duration-500"
+                  style={{ width: `${cleanliness}%` }}></div>
               </div>
               <p className="text-center text-[#3B4D61] mt-2">
                 Cleanliness: {cleanliness}%
@@ -435,10 +355,21 @@ const BathroomMenu = ({ onClose }) => {
             {/* Wash Items Grid Layout */}
             <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[300px] overflow-y-auto">
               {washItems.map((item, index) => (
-                <div key={index} className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform">
-                  <Image src={item.image} alt={item.name} width={80} height={80} />
-                  <p className="text-[#5D4037] text-lg font-semibold mt-2">{item.name}</p>
-                  <button onClick={() => handleWash(item)} className="bg-[#FFAAA5] text-white px-3 py-1 rounded-lg shadow-md hover:scale-110 transition-transform">
+                <div
+                  key={index}
+                  className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform">
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    width={80}
+                    height={80}
+                  />
+                  <p className="text-[#5D4037] text-lg font-semibold mt-2">
+                    {item.name}
+                  </p>
+                  <button
+                    onClick={() => handleWash(item)}
+                    className="bg-[#FFAAA5] text-white px-3 py-1 rounded-lg shadow-md hover:scale-110 transition-transform">
                     Use
                   </button>
                 </div>
@@ -448,118 +379,15 @@ const BathroomMenu = ({ onClose }) => {
         )}
 
         {/* Close Button */}
-        <button onClick={onClose} className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">✖</button>
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
+          ✖
+        </button>
       </div>
     </div>
   );
 };
-
-
-// const KitchenMenu = ({ onClose, foodItems }) => {
-//   const [hunger, setHunger] = useState(100);
-//   const [isEating, setIsEating] = useState(false);
-//   const [eatingFood, setEatingFood] = useState(null); // Track which food is being eaten
-
-//   const handleFeed = (food) => {
-//     if (!food || typeof food.hungerReduction !== "number") {
-//       console.error("Invalid food item:", food);
-//       return;
-//     }
-
-//     setHunger((prev) => Math.max((prev || 0) - food.hungerReduction, 0));
-
-//     setEatingFood(food.name); // Track the food being eaten
-//     setIsEating(true);
-
-//     setTimeout(() => {
-//       setIsEating(false);
-//       setEatingFood(null); // Reset after animation
-//     }, 800);
-//   };
-
-//   return (
-//     <div className="flex items-center justify-center bg-opacity-50">
-//       <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[1000px] h-[550px] flex flex-col items-center">
-//         {/* Decorative Header */}
-//         <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-6 py-2 rounded-md shadow-md text-white font-bold text-lg">
-//           🍽️ Time to Feed Metamon!
-//         </div>
-
-//         {/* Metamon Display */}
-//         <div className="p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[150px] flex flex-col items-center justify-center relative">
-//           <p className="text-center text-[#5D4037] font-semibold text-lg">
-//             Your Metamon is hungry! 🍽️
-//           </p>
-//           <div className="relative mt-2">
-//             <Image
-//               src="/gacha2/rare/fox/1.png"
-//               alt="Hungry Metamon"
-//               width={100}
-//               height={100}
-//               className={hunger === 0 ? "hidden" : "block"}
-//             />
-//             <Image
-//               src="/gacha2/rare/fox/2.png"
-//               alt="Full Metamon"
-//               width={100}
-//               height={100}
-//               className={hunger === 0 ? "block" : "hidden"}
-//             />
-
-//             {/* Eating Animation (Only when a specific food is being eaten) */}
-//             {isEating && eatingFood && (
-//               <div className="absolute inset-0 flex justify-center items-center animate-bounce">
-//                 <Image
-//                   src={`/shop/${eatingFood.replace(/\s+/g, '-').toLowerCase()}.png`}
-//                   alt={`Eating ${eatingFood}`}
-//                   width={100}
-//                   height={100}
-//                 />
-
-//               </div>
-//             )}
-//           </div>
-//         </div>
-
-//         {/* Hunger Progress Bar */}
-//         <div className="w-full mt-4">
-//           <div className="bg-gray-300 w-[80%] h-6 rounded-full overflow-hidden mx-auto">
-//             <div
-//               className="bg-[#FF8C00] h-full transition-all duration-500"
-//               style={{ width: `${hunger}%` }}></div>
-//           </div>
-//           <p className="text-center text-[#3B4D61] mt-2">Hunger: {hunger}%</p>
-//         </div>
-
-//         {/* Food Items Grid Layout */}
-//         <div className="grid grid-cols-2 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[300px] overflow-y-auto">
-//           {foodItems.map((item, index) => (
-//             <div
-//               key={index}
-//               className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform">
-//               <Image src={item.image} alt={item.name} width={80} height={80} />
-//               <p className="text-[#5D4037] text-lg font-semibold mt-2">
-//                 {item.name}
-//               </p>
-//               <button
-//                 onClick={() => handleFeed(item)}
-//                 className="mt-2 bg-[#FFAAA5] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
-//                 Feed
-//               </button>
-//             </div>
-//           ))}
-//         </div>
-
-//         {/* Close Button */}
-//         <button
-//           onClick={onClose}
-//           className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
-//           ✖
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
 
 const KitchenMenu = ({ onClose, foodItems }) => {
   const [hunger, setHunger] = useState(100);
@@ -596,31 +424,29 @@ const KitchenMenu = ({ onClose, foodItems }) => {
     fetchPets();
   }, []);
 
-  
   const handleFeed = async (food) => {
     if (!food || typeof food.hungerReduction !== "number") {
       console.error("Invalid food item:", food);
       return;
     }
-  
+
     setHunger((prev) => Math.max((prev || 0) - food.hungerReduction, 0));
     setEatingFood(food.name);
     setIsEating(true);
-    
-  // Added code for carePet function 
+
+    // Added code for carePet function
     try {
       await nakama.carePet(selectedPetId, "feed"); // ⬅️ Send action to backend
       console.log(`Fed ${selectedPet.dna.species} with ${food.name}`);
     } catch (error) {
       console.error("Failed to update pet hunger:", error);
     }
-  
+
     setTimeout(() => {
       setIsEating(false);
       setEatingFood(null);
     }, 800);
   };
-  
 
   return (
     <div className="flex items-center justify-center bg-opacity-50">
@@ -639,7 +465,9 @@ const KitchenMenu = ({ onClose, foodItems }) => {
               </p>
             </div>
 
-            {loading && <p className="text-center text-gray-600">Loading pets...</p>}
+            {loading && (
+              <p className="text-center text-gray-600">Loading pets...</p>
+            )}
             {error && <p className="text-center text-red-500">{error}</p>}
 
             {!loading && pets.length > 0 ? (
@@ -651,8 +479,7 @@ const KitchenMenu = ({ onClose, foodItems }) => {
                     onClick={() => {
                       setSelectedPet(pet);
                       setSelectedPetId(petsId[index]);
-                    }}
-                  >
+                    }}>
                     <Image
                       src={`/gacha2/${pet.dna.rarity}/${pet.dna.species}/1.png`}
                       alt={pet.dna.species}
@@ -669,7 +496,9 @@ const KitchenMenu = ({ onClose, foodItems }) => {
                 ))}
               </div>
             ) : (
-              !loading && <p className="text-center text-gray-600">No pets found.</p>
+              !loading && (
+                <p className="text-center text-gray-600">No pets found.</p>
+              )
             )}
           </>
         ) : (
@@ -687,8 +516,7 @@ const KitchenMenu = ({ onClose, foodItems }) => {
               />
               <button
                 onClick={() => setSelectedPet(null)}
-                className="mt-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md"
-              >
+                className="mt-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md">
                 Change Pet
               </button>
             </div>
@@ -698,10 +526,11 @@ const KitchenMenu = ({ onClose, foodItems }) => {
               <div className="bg-gray-300 w-[80%] h-6 rounded-full overflow-hidden mx-auto">
                 <div
                   className="bg-[#FF8C00] h-full transition-all duration-500"
-                  style={{ width: `${hunger}%` }}
-                ></div>
+                  style={{ width: `${hunger}%` }}></div>
               </div>
-              <p className="text-center text-[#3B4D61] mt-2">Hunger: {hunger}%</p>
+              <p className="text-center text-[#3B4D61] mt-2">
+                Hunger: {hunger}%
+              </p>
             </div>
 
             {/* Food Items Grid Layout */}
@@ -709,14 +538,19 @@ const KitchenMenu = ({ onClose, foodItems }) => {
               {foodItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform"
-                >
-                  <Image src={item.image} alt={item.name} width={80} height={80} />
-                  <p className="text-[#5D4037] text-lg font-semibold mt-2">{item.name}</p>
+                  className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform">
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    width={80}
+                    height={80}
+                  />
+                  <p className="text-[#5D4037] text-lg font-semibold mt-2">
+                    {item.name}
+                  </p>
                   <button
                     onClick={() => handleFeed(item)}
-                    className="mt-2 bg-[#FFAAA5] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform"
-                  >
+                    className="mt-2 bg-[#FFAAA5] text-white px-6 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
                     Feed
                   </button>
                 </div>
@@ -728,195 +562,66 @@ const KitchenMenu = ({ onClose, foodItems }) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform"
-        >
+          className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform">
           ✖
         </button>
       </div>
     </div>
   );
 };
-
-
-// const GameRoomMenu = ({ onClose }) => {
-//   const [selectedPet, setSelectedPet] = useState(null);
-//   const [selectedPetId, setSelectedPetId] = useState(null);
-//   const [selectedGame, setSelectedGame] = useState(null);
-//   const [pets, setPets] = useState([]);
-//   const [petsId, setPetsId] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   const nakama = useNakama(); // Get Nakama API instance
-
-//   useEffect(() => {
-//     const fetchPets = async () => {
-//       try {
-//         setLoading(true);
-//         await nakama.authenticate();
-//         const owner = JSON.parse(localStorage.getItem("ownerData"));
-
-//         // Fetch pets from backend
-//         const petsData = await nakama.getOwnerPets(owner.address);
-//         setPets(petsData.payload.pets || []);
-//         setPetsId(petsData.payload.petsId || []);
-//       } catch (err) {
-//         console.error("Error fetching pets:", err);
-//         setError("Failed to load pets. Please try again.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchPets();
-//   }, []);
-
-//   return (
-//     <div className="flex items-center justify-center bg-opacity-50">
-//       <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[900px] h-[600px] flex flex-col items-center">
-//         {/* Header */}
-//         <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-8 py-3 rounded-md shadow-md text-white font-bold text-lg">
-//           🎮 Time for a Game!
-//         </div>
-
-//         {/* Pet Selection */}
-//         {!selectedPet ? (
-//           <>
-//             <div className="p-4 m-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full flex flex-col items-center">
-//               <p className="text-center text-[#5D4037] font-semibold text-lg">
-//                 Select a pet to play the game! 🐾
-//               </p>
-//             </div>
-
-//             {/* Show loading state */}
-//             {loading && <p className="text-center text-gray-600">Loading pets...</p>}
-
-//             {/* Show error message if failed to load */}
-//             {error && <p className="text-center text-red-500">{error}</p>}
-
-//             {/* Pet List */}
-//             {!loading && pets.length > 0 ? (
-//               <div className="grid grid-cols-3 gap-4 p-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full h-[400px] overflow-y-auto">
-//                 {pets.map((pet, index) => (
-//                   <div
-//                     key={index}
-//                     className="flex flex-col items-center bg-[#FDF6E3] p-4 rounded-lg border-[3px] border-[#D4B483] shadow-md hover:scale-105 transition-transform cursor-pointer"
-//                     onClick={() => {
-//                       setSelectedPet(pet)
-//                       setSelectedPetId(petsId[index])
-//                     }}
-//                   >
-//                     <Image
-//                       src={`/gacha2/${pet.dna.rarity}/${pet.dna.species}/1.png`}
-//                       alt={pet.dna.species}
-//                       width={80}
-//                       height={80}
-//                     />
-//                     <p className="text-[#5D4037] text-lg font-semibold mt-2">
-//                       {pet.dna.species}
-//                     </p>
-//                     <button className="mt-2 bg-[#D4B483] text-white px-4 py-2 rounded-lg shadow-md">
-//                       Select
-//                     </button>
-//                   </div>
-//                 ))}
-//               </div>
-//             ) : (
-//               !loading && <p className="text-center text-gray-600">No pets found.</p>
-//             )}
-//           </>
-//         ) : selectedGame === null ? (
-//           <>
-//             {/* Display Selected Pet */}
-//             <div className="p-4 m-4 bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner w-full flex flex-col items-center">
-//               <p className="text-center text-[#5D4037] font-semibold text-lg">
-//                 Selected Pet: {selectedPet.dna.species} 🐾
-//               </p>
-//               <Image
-//                 src={`/gacha2/${selectedPet.dna.rarity}/${selectedPet.dna.species}/1.png`}
-//                 alt={selectedPet.dna.species}
-//                 width={100}
-//                 height={100}
-//               />
-//               <button
-//                 onClick={() => setSelectedPet(null)}
-//                 className="mt-2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-md"
-//               >
-//                 Change Pet
-//               </button>
-//             </div>
-
-//             {/* Game Selection */}
-//             <div className="w-full bg-[#FAF3E0] border-[3px] border-[#D4B483] rounded-lg shadow-inner p-4">
-//               <div className="grid grid-cols-2 gap-4">
-//                 {/* Memory Card Game */}
-//                 <div
-//                   className="flex flex-col items-center p-4 border-[3px] border-[#D4B483] bg-[#FDF6E3] rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform"
-//                   onClick={() => setSelectedGame("memory")}
-//                 >
-//                   <Image
-//                     src="/game-items/memory-card-game.png"
-//                     alt="Memory Game"
-//                     width={80}
-//                     height={80}
-//                   />
-//                   <p className="text-[#5D4037] font-semibold mt-2">
-//                     Memory Card Game 🧠
-//                   </p>
-//                   <button className="mt-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-lg shadow-md">
-//                     Play
-//                   </button>
-//                 </div>
-
-//                 {/* Catch the Falling Items */}
-//                 <div
-//                   className="flex flex-col items-center p-4 border-[3px] border-[#D4B483] bg-[#FDF6E3] rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform"
-//                   onClick={() => setSelectedGame("catch")}
-//                 >
-//                   <Image
-//                     src="/game-items/arcade-machine.png"
-//                     alt="Catch Game"
-//                     width={80}
-//                     height={80}
-//                   />
-//                   <p className="text-[#5D4037] font-semibold mt-2">
-//                     Catch the Falling Items 🍎
-//                   </p>
-//                   <button className="mt-2 bg-[#FFD700] text-white px-4 py-2 rounded-lg shadow-md">
-//                     Play
-//                   </button>
-//                 </div>
-//               </div>
-//             </div>
-//           </>
-//         ) : selectedGame === "memory" ? (
-//           <MemoryCardGame onExit={() => setSelectedGame(null)} />
-//         ) : (
-//           <CatchFallingItemsGame onExit={() => setSelectedGame(null)} />
-//         )}
-
-//         {/* Close Button */}
-//         <button
-//           onClick={onClose}
-//           className="absolute top-2 right-2 bg-[#FFAAA5] text-white px-4 py-2 rounded-full shadow-md hover:scale-105 transition-transform"
-//         >
-//           ✖
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-const GameRoomMenu = ({ onClose }) => {
+const EvolveModal = ({ onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-[400px] flex flex-col items-center">
+        <h2 className="text-lg font-bold text-[#5D4037]">✨ Your Metamon is Evolving! ✨</h2>
+        <Image
+          src="/gacha2/rare/fox/evolve.gif" 
+          alt="Evolving Metamon"
+          width={150}
+          height={150}
+          className="mt-4"
+        />
+        <p className="text-center text-[#5D4037] mt-4">Congratulations! Your Metamon has evolved to its next form!</p>
+        <button
+          onClick={onClose}
+          className="mt-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-md hover:scale-105 transition-transform">
+          🎉 Celebrate
+        </button>
+      </div>
+    </div>
+  );
+};
+const GameRoomMenu = ({ onClose }) => { 
   const [selectedGame, setSelectedGame] = useState(null);
+  const [happiness, setHappiness] = useState(0);
+  const [showEvolveModal, setShowEvolveModal] = useState(false);
+  
+  
+  const nakama = useNakama();
+  const handleGameCompletion = (score) => {
+    const newHappiness = Math.min(happiness + score, 100);
+    setHappiness(newHappiness);
+    setSelectedGame(null); 
+
+    // 🦊✨ Show evolve modal when happiness reaches 100
+    if (newHappiness === 100) {
+      setShowEvolveModal(true);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center bg-opacity-50">
       <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[900px] h-[600px] flex flex-col items-center">
-        {/* Header (Styled like Shop) */}
+        {/* Header */}
         <div className="absolute top-[-20px] left-1/2 transform -translate-x-1/2 bg-[#D4B483] px-8 py-3 rounded-md shadow-md text-white font-bold text-lg">
-          🎮 Time for Game !
+          🎮 Time for Game!
         </div>
+
+        {/* Happiness Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-6 mt-4">
+          <div className="bg-green-500 h-6 rounded-full transition-all duration-500" style={{ width: `${happiness}%` }}></div>
+        </div>
+        <p className="text-center text-[#5D4037] font-semibold">Happiness: {happiness}%</p>
 
         {/* Game Selection */}
         {selectedGame === null ? (
@@ -975,10 +680,13 @@ const GameRoomMenu = ({ onClose }) => {
             </div>
           </>
         ) : selectedGame === "memory" ? (
-          <MemoryCardGame onExit={() => setSelectedGame(null)} />
+          <MemoryCardGame onExit={handleGameCompletion} />
         ) : (
-          <CatchFallingItemsGame onExit={() => setSelectedGame(null)} />
+          <CatchFallingItemsGame onExit={handleGameCompletion} />
         )}
+
+        {/* Evolve Modal (Only Show When Happiness is 100) */}
+        {showEvolveModal && <EvolveModal onClose={() => setShowEvolveModal(false)} />}
 
         {/* Close Button */}
         <button
@@ -1000,6 +708,8 @@ const MemoryCardGame = ({ onExit }) => {
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(60);
   const [timerRunning, setTimerRunning] = useState(true);
+
+
 
   useEffect(() => {
     const shuffledItems = [...gameItems]
@@ -1029,10 +739,20 @@ const MemoryCardGame = ({ onExit }) => {
     }, 1000);
 
     return () => clearInterval(countdown);
-  }, [gameOver]); // ✅ Stop timer when game is over
+  }, [gameOver]);
+
+  useEffect(() => {
+    if (matchedPairs.length === cards.length && cards.length > 0) {
+      setGameOver(true);
+      setTimerRunning(false); // Stop the timer
+      setTimeout(() => onExit(score), 1000); // Exit after a short delay
+    }
+  }, [matchedPairs]);
 
   const handleCardClick = (index) => {
-    if (flippedIndexes.length === 2 || matchedPairs.includes(index)) return;
+    if (flippedIndexes.length === 2 || flippedIndexes.includes(index) || matchedPairs.includes(index)) {
+      return;
+    }
 
     const newFlipped = [...flippedIndexes, index];
     setFlippedIndexes(newFlipped);
@@ -1054,13 +774,6 @@ const MemoryCardGame = ({ onExit }) => {
     }
   };
 
-  useEffect(() => {
-    if (matchedPairs.length === cards.length && cards.length > 0) {
-      setGameOver(true);
-      setTimerRunning(false); // ✅ Stop the timer
-    }
-  }, [matchedPairs]);
-
   return (
     <>
       <div className="flex justify-between items-center p-4">
@@ -1074,10 +787,11 @@ const MemoryCardGame = ({ onExit }) => {
         {cards.map((card, index) => (
           <div
             key={card.id}
-            className={`w-[100px] h-[140px] flex items-center justify-center bg-white border-2 border-gray-300 cursor-pointer transition-transform duration-500 ${flippedIndexes.includes(index) || matchedPairs.includes(index)
+            className={`w-[100px] h-[140px] flex items-center justify-center bg-white border-2 border-gray-300 cursor-pointer transition-transform duration-500 ${
+              flippedIndexes.includes(index) || matchedPairs.includes(index)
                 ? "rotate-y-180"
                 : ""
-              }`}
+            }`}
             onClick={() => handleCardClick(index)}>
             {flippedIndexes.includes(index) || matchedPairs.includes(index) ? (
               <Image src={card.image} alt={card.name} width={80} height={80} />
@@ -1086,8 +800,8 @@ const MemoryCardGame = ({ onExit }) => {
                 <Image
                   src="/game-items/memory-card-game.png"
                   alt="Memory Game Card"
-                  layout="fill" // Fills the entire card
-                  objectFit="cover" // Ensures the image covers the card without distortion
+                  layout="fill"
+                  objectFit="cover"
                   className="rounded-lg"
                 />
               </div>
@@ -1103,7 +817,7 @@ const MemoryCardGame = ({ onExit }) => {
       )}
 
       <button
-        onClick={onExit}
+        onClick={() => onExit(score)}
         className="mt-4 bg-red-500 text-white px-4 py-2 rounded">
         Exit
       </button>
@@ -1111,7 +825,9 @@ const MemoryCardGame = ({ onExit }) => {
   );
 };
 
+
 const CatchFallingItemsGame = ({ onExit }) => {
+  
   const gameWidth = 400;
   const gameHeight = 390;
   const playerWidth = 80;
@@ -1120,6 +836,8 @@ const CatchFallingItemsGame = ({ onExit }) => {
   const [playerX, setPlayerX] = useState(200);
   const [fallingItems, setFallingItems] = useState([]);
   const [score, setScore] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+
 
   // Generate falling items at random positions
   useEffect(() => {
@@ -1135,7 +853,10 @@ const CatchFallingItemsGame = ({ onExit }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+    if (gameOver) {
+      onExit(score);
+    }
+  }, [gameOver, score, onExit]);
 
   // Move falling items downward
   useEffect(() => {
@@ -1233,7 +954,7 @@ const CatchFallingItemsGame = ({ onExit }) => {
       {/* Exit Button */}
       <div className="flex justify-center mt-4">
         <button
-          onClick={onExit}
+          onClick={() => onExit(score)}
           className="bg-red-500 text-white px-4 py-2 rounded">
           Exit
         </button>
@@ -1245,6 +966,9 @@ const CatchFallingItemsGame = ({ onExit }) => {
 const EggRoomMenu = ({ onClose }) => {
   const [selectedEgg, setSelectedEgg] = useState(null);
   const [isHatching, setIsHatching] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [pets, setPets] = useState([]);
+
   const nakama = useNakama();
 
   const handleGetOwnerPets = async () => {
@@ -1302,15 +1026,32 @@ const EggRoomMenu = ({ onClose }) => {
       setIsHatching(true);
       await nakama.authenticate();
       const owner = JSON.parse(localStorage.getItem("ownerData"));
-      const selectedRarity = selectRarityByChance(selectedEgg.chances);
-      const response = await nakama.createEgg(owner.address, selectedRarity);
+      if (!owner?.address) {
+        return;
+      }
 
-      console.log("Hatched egg:", response);
-      alert(`Successfully hatched a ${selectedRarity} Metamon!`);
-      handleBackToEggs();
+      const result = await nakama.getOwner(owner.address);
+
+      if (result) {
+        const newBalance = result.payload.owner.balance;
+        const selectedRarity = selectRarityByChance(selectedEgg.chances);
+  
+        if (newBalance >= selectedEgg.price) {
+            const response = await nakama.createEgg(owner.address, selectedRarity);
+            await nakama.updateBalance(-Number(selectedEgg.price))
+            const updatedPets = await handleGetOwnerPets();
+            setPets(updatedPets.payload.pets);
+            console.log("Hatched egg:", response);
+            alert(`Successfully hatched a ${selectedRarity} Metamon!`);
+            handleBackToEggs();
+        } else {
+  
+            alert("Not enough tokens to purchase eggs, PLEASE SWAP")
+        }
+      };
+
     } catch (error) {
       console.error("Failed to hatch egg:", error);
-      alert("Failed to hatch egg. Please try again.");
     } finally {
       setIsHatching(false);
     }
@@ -1414,8 +1155,9 @@ const EggRoomMenu = ({ onClose }) => {
                     onClick={handleHatchEgg}
                     disabled={isHatching}
                     className={`bg-[#FFAAA5] text-white px-6 py-2 rounded-lg shadow-md
-        ${isHatching ? "opacity-50 cursor-not-allowed" : "hover:bg-[#FF9A95]"
-                      }`}>
+        ${
+          isHatching ? "opacity-50 cursor-not-allowed" : "hover:bg-[#FF9A95]"
+        }`}>
                     {isHatching
                       ? "Hatching..."
                       : `Hatch Egg (${selectedEgg.price} 🪙)`}
@@ -1460,7 +1202,7 @@ const PetRoomMenu = ({ onClose }) => {
     const fetchPets = async () => {
       const petsData = await handleGetOwnerPets();
       setPets(petsData.pets);
-      setPetIds(petsData.petsId)
+      setPetIds(petsData.petsId);
     };
 
     fetchPets();
@@ -1478,7 +1220,8 @@ const PetRoomMenu = ({ onClose }) => {
       legendary: "text-yellow-500",
     };
     return colors[rarity.toLowerCase()] || "text-gray-500";
-  }; return (
+  };
+  return (
     <>
       <div className="flex items-center justify-center bg-opacity-50">
         <div className="relative bg-[#F5E6C8] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-[1000px] h-auto">

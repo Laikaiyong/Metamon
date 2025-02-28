@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import InteractivePoints from "./interactive-points";
 import DPadButton from "./dpad-button";
+import { useNakama } from "@/app/providers";
 
 const screenData = {
     openMap: {
@@ -135,6 +136,7 @@ export default function InteractiveScreen({ currentScreen, setCurrentScreen, onP
 
     // Dynamic Tile Size
     const [tileSize, setTileSize] = useState(0);
+
 
     useEffect(() => {
         const updateTileSize = () => {

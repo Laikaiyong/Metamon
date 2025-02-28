@@ -39,7 +39,6 @@ func OwnerPets(world cardinal.WorldContext, req *OwnerPetsRequest) (*OwnerPetsRe
 			log.Printf("Found pet ID %v with owner address: %v", id, pet.Owner.Address)
 
 			if pet.Owner.Address == req.Address {
-				log.Printf("Match found! Adding pet ID %v to results", id)
 				pets = append(pets, *pet)
 				petsId = append(petsId, id)
 			}

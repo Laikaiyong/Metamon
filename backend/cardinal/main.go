@@ -44,6 +44,7 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterMessage[msg.PurchaseItemMsg, msg.PurchaseItemResult](w, "purchaseitem"),
 		cardinal.RegisterMessage[msg.ConsumeItemMsg, msg.ConsumeItemResult](w, "consumeitem"),
 		cardinal.RegisterMessage[msg.UpdateBalanceMsg, msg.UpdateBalanceResult](w, "updatebalance"),
+		cardinal.RegisterMessage[msg.PassiveDecayMsg, msg.PassiveDecayResult](w, "passivedecay"),
 	)
 
 	// Register queries
@@ -65,6 +66,7 @@ func MustInitWorld(w *cardinal.World) {
 		system.ConsumeItemSystem,
 		system.PurchaseItemSystem,
 		system.BalanceSystem,
+		system.PassiveDecaySystem,
 	))
 
 	// Must(cardinal.RegisterInitSystems(w,

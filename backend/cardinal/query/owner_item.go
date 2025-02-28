@@ -1,6 +1,7 @@
 package query
 
 import (
+	"fmt"
 	"log"
 	comp "metamon/component"
 
@@ -18,7 +19,8 @@ type OwnerItemsResponse struct {
 }
 
 func OwnerItems(world cardinal.WorldContext, req *OwnerItemsRequest) (*OwnerItemsResponse, error) {
-	var items []comp.ShopItem
+	// Map to track item quantities: key = "title:type"
+	itemMap := make(map[string]*comp.ShopItem)
 
 	log.Printf("OwnerItems: Searching for items with owner address: %s", req.Address)
 
@@ -35,7 +37,17 @@ func OwnerItems(world cardinal.WorldContext, req *OwnerItemsRequest) (*OwnerItem
 
 			// Check if this OwnerShopItem belongs to the requested owner
 			if ownerItem.Owner == req.Address {
-				items = append(items, ownerItem.Items...)
+				// Merge items by title and type
+				for _, item := range ownerItem.Items {
+					key := fmt.Sprintf("%s:%s", item.Title, item.Type)
+					if existing, ok := itemMap[key]; ok {
+						existing.Quantity++
+					} else {
+						newItem := item
+						newItem.Quantity = 1
+						itemMap[key] = &newItem
+					}
+				}
 			}
 			return true
 		})
@@ -45,8 +57,13 @@ func OwnerItems(world cardinal.WorldContext, req *OwnerItemsRequest) (*OwnerItem
 		return nil, err
 	}
 
-	// Debug: Log results
-	log.Printf("Search complete. Processed %d items, found %d matches", count, len(items))
+	// Convert map to slice
+	items := make([]comp.ShopItem, 0, len(itemMap))
+	for _, item := range itemMap {
+		items = append(items, *item)
+	}
+
+	log.Printf("Search complete. Processed %d entities, found %d unique items", count, len(items))
 
 	return &OwnerItemsResponse{Items: items}, nil
 }

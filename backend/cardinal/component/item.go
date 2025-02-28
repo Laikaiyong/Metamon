@@ -6,6 +6,7 @@ type ShopItem struct {
 	Type        string  `json:"type"`
 	Description string  `json:"description"`
 	Price       float64 `json:"price"`
+	Quantity    int64   `json:"quantity"`
 }
 
 func (ShopItem) Name() string {

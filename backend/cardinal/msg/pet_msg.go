@@ -36,3 +36,12 @@ type CreateEggResult struct {
 	EggID   types.EntityID `json:"eggId"`
 	DNA     comp.DNA       `json:"dna"`
 }
+
+type PassiveDecayMsg struct {
+	OwnerAddress string `json:"owner"`
+}
+
+type PassiveDecayResult struct {
+	Success bool           `json:"success"`
+	States  map[string]int `json:"states"` // petId -> amount decreased
+}

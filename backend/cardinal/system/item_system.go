@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	comp "metamon/component"
 	"metamon/msg"
 
@@ -14,7 +15,6 @@ func PurchaseItemSystem(world cardinal.WorldContext) error {
 		world,
 		func(purchase cardinal.TxData[msg.PurchaseItemMsg]) (msg.PurchaseItemResult, error) {
 			// Get user's owner component
-			var owner comp.Owner
 			var ownerID types.EntityID
 
 			err := cardinal.NewSearch().Entity(
@@ -25,7 +25,6 @@ func PurchaseItemSystem(world cardinal.WorldContext) error {
 						return true
 					}
 					if o.Address == purchase.Msg.Owner {
-						owner = *o
 						ownerID = id
 						return false
 					}
@@ -33,10 +32,10 @@ func PurchaseItemSystem(world cardinal.WorldContext) error {
 				})
 
 			if err != nil {
-				return msg.PurchaseItemResult{Success: false}, err
+				return msg.PurchaseItemResult{Success: false}, fmt.Errorf("owner not found")
 			}
 
-			// Create new shop item from message
+			// Create new shop item
 			newItem := comp.ShopItem{
 				Title:       purchase.Msg.Title,
 				Type:        purchase.Msg.Type,
@@ -45,39 +44,32 @@ func PurchaseItemSystem(world cardinal.WorldContext) error {
 				Price:       purchase.Msg.Price,
 			}
 
-			// Check if user has enough balance
-			totalCost := newItem.Price * float64(purchase.Msg.Amount)
-			if float64(owner.Balance) < totalCost {
-				return msg.PurchaseItemResult{Success: false}, nil
-			}
-
-			// Update owner balance
-			owner.Balance -= int64(totalCost)
-			if err := cardinal.SetComponent(world, ownerID, &owner); err != nil {
-				return msg.PurchaseItemResult{Success: false}, err
-			}
-
-			// Add items to user's inventory
+			// Get or create inventory
 			inventory, err := cardinal.GetComponent[comp.OwnerShopItem](world, ownerID)
 			if err != nil {
+				// Create new inventory
 				inventory = &comp.OwnerShopItem{
 					Owner: purchase.Msg.Owner,
 					Items: []comp.ShopItem{},
 				}
+				_, err = cardinal.Create(world, inventory)
+				if err != nil {
+					return msg.PurchaseItemResult{Success: false}, fmt.Errorf("failed to create inventory: %v", err)
+				}
 			}
 
-			// Add purchased items
+			// Add items
 			for i := uint32(0); i < purchase.Msg.Amount; i++ {
 				inventory.Items = append(inventory.Items, newItem)
 			}
 
-			if err := cardinal.SetComponent(world, ownerID, inventory); err != nil {
-				return msg.PurchaseItemResult{Success: false}, err
+			err = cardinal.SetComponent(world, ownerID, inventory)
+			if err != nil {
+				return msg.PurchaseItemResult{Success: false}, fmt.Errorf("failed to update inventory: %v", err)
 			}
 
 			return msg.PurchaseItemResult{
 				Success: true,
-				Balance: uint64(owner.Balance),
 				Item:    newItem,
 			}, nil
 		})

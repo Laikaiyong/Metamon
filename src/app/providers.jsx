@@ -171,21 +171,54 @@ class Nakama {
         );
     }
 
-    async purchaseItem(itemId) {
+    // Update balance transaction
+    async updateBalance(amount) {
         if (!this.session) throw new Error("No active session");
+        const owner = JSON.parse(localStorage.getItem("ownerData"));
         return await this.client.rpc(
             this.session,
-            "tx/game/purchaseitem",
-            { personaTag: this.gameState.personaTag, itemId }
+            "tx/game/updatebalance",
+            { 
+                personaTag: this.gameState.personaTag,
+                owner_address: owner.address,
+                amount: amount 
+            }
         );
     }
 
-    async consumeItem(itemId, targetId) {
+    // Updated item transactions
+    async purchaseItem(item, amount = 1) {
         if (!this.session) throw new Error("No active session");
+        const owner = JSON.parse(localStorage.getItem("ownerData"));
+        return await this.client.rpc(
+            this.session,
+            "tx/game/purchaseitem",
+            {
+                personaTag: this.gameState.personaTag,
+                owner: owner.address,
+                title: item.name,
+                type: item.type,
+                description: item.description,
+                image: item.image,
+                price: item.price,
+                amount: amount
+            }
+        );
+    }
+
+    async consumeItem(item, amount = 1) {
+        if (!this.session) throw new Error("No active session");
+        const owner = JSON.parse(localStorage.getItem("ownerData"));
         return await this.client.rpc(
             this.session,
             "tx/game/consumeitem",
-            { personaTag: this.gameState.personaTag, itemId, targetId }
+            {
+                personaTag: this.gameState.personaTag,
+                owner: owner.address,
+                title: item.name,
+                type: item.type,
+                amount: amount
+            }
         );
     }
 
@@ -209,6 +242,7 @@ class Nakama {
     }
 
     async getOwnerPets(owner) {
+        await this.triggerPassiveDecay();
         if (!this.session) throw new Error("No active session");
         return await this.client.rpc(
             this.session,
@@ -223,6 +257,20 @@ class Nakama {
             this.session,
             "query/game/owneritems",
             { personaTag: this.gameState.personaTag, owner }
+        );
+    }
+
+    // Passive function
+    async triggerPassiveDecay() {
+        if (!this.session) throw new Error("No active session");
+        const owner = JSON.parse(localStorage.getItem("ownerData"));
+        return await this.client.rpc(
+            this.session,
+            "tx/game/passivedecay",
+            { 
+                personaTag: this.gameState.personaTag,
+                owner: owner.address 
+            }
         );
     }
 }
