@@ -176,6 +176,7 @@ export default function Page() {
             <div className="flex flex-col space-y-4 p-6 bg-white rounded-lg shadow-lg border-8 border-[#A8E6CF]">
               {currentScreen === "openMap" && (
                 <div>
+                  
                   <button
                     onClick={() => setCurrentScreen("shop")}
                     className="flex items-center space-x-4 w-full p-3 hover:bg-[#A8E6CF] rounded-lg transition-all"

@@ -48,7 +48,7 @@ const Wiki = () => {
         { id: "#E007", name: "Epic Phoenix 1", img: "/gacha/epic/phoenix/1.png" },
         { id: "#E008", name: "Epic Phoenix 2", img: "/gacha/epic/phoenix/2.png" },
         { id: "#E009", name: "Epic Phoenix 3", img: "/gacha/epic/phoenix/3.png" },
-      ],
+      ],  
       legendary: [
         {
           id: "#L001",
