@@ -1,27 +1,34 @@
 package msg
 
-// PurchaseItemMsg represents a request to purchase an item from shop
+import (
+	comp "metamon/component"
+)
+
 type PurchaseItemMsg struct {
-	Owner  string `json:"owner"`
-	ItemID string `json:"itemId"`
-	Amount uint32 `json:"amount"`
+	Owner       string  `json:"owner"`
+	Title       string  `json:"name"`
+	Type        string  `json:"type"`
+	Description string  `json:"description"`
+	Image       string  `json:"image"`
+	Price       float64 `json:"price"`
+	Amount      uint32  `json:"amount"`
 }
 
-// PurchaseItemResult represents the result of a purchase attempt
 type PurchaseItemResult struct {
-	Success bool   `json:"success"`
-	Balance uint64 `json:"balance"` // remaining balance after purchase
+	Success bool          `json:"success"`
+	Balance uint64        `json:"balance"`
+	Item    comp.ShopItem `json:"item"`
 }
 
-// ConsumeItemMsg represents a request to use/consume an item
 type ConsumeItemMsg struct {
 	Owner  string `json:"owner"`
-	ItemID string `json:"itemId"`
+	Title  string `json:"name"`
+	Type   string `json:"type"`
 	Amount uint32 `json:"amount"`
 }
 
-// ConsumeItemResult represents the result of item consumption
 type ConsumeItemResult struct {
-	Success  bool   `json:"success"`
-	Quantity uint32 `json:"quantity"` // remaining quantity after consumption
+	Success  bool          `json:"success"`
+	Quantity uint32        `json:"quantity"`
+	Item     comp.ShopItem `json:"item"`
 }

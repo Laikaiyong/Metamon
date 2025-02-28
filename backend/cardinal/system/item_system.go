@@ -1,7 +1,6 @@
 package system
 
 import (
-	"metamon/component"
 	comp "metamon/component"
 	"metamon/msg"
 
@@ -32,58 +31,44 @@ func PurchaseItemSystem(world cardinal.WorldContext) error {
 					}
 					return true
 				})
+
 			if err != nil {
 				return msg.PurchaseItemResult{Success: false}, err
 			}
 
-			// Get shop item
-			var item comp.ShopItem
-
-			err = cardinal.NewSearch().Entity(
-				filter.Exact(filter.Component[comp.ShopItem]())).
-				Each(world, func(id types.EntityID) bool {
-					o, err := cardinal.GetComponent[comp.ShopItem](world, id)
-					if err != nil {
-						return true
-					}
-					if o.Title == purchase.Msg.ItemID {
-						item = *o
-						return false
-					}
-					return true
-				})
-			if err != nil {
-				return msg.PurchaseItemResult{Success: false}, err
+			// Create new shop item from message
+			newItem := comp.ShopItem{
+				Title:       purchase.Msg.Title,
+				Type:        purchase.Msg.Type,
+				Description: purchase.Msg.Description,
+				Image:       purchase.Msg.Image,
+				Price:       purchase.Msg.Price,
 			}
-
-			// Calculate total cost
-			totalCost := item.Price * float64(purchase.Msg.Amount)
 
 			// Check if user has enough balance
+			totalCost := newItem.Price * float64(purchase.Msg.Amount)
 			if float64(owner.Balance) < totalCost {
-				return msg.PurchaseItemResult{
-					Success: false,
-					Balance: uint64(owner.Balance),
-				}, nil
+				return msg.PurchaseItemResult{Success: false}, nil
 			}
 
+			// Update owner balance
 			owner.Balance -= int64(totalCost)
 			if err := cardinal.SetComponent(world, ownerID, &owner); err != nil {
 				return msg.PurchaseItemResult{Success: false}, err
 			}
 
 			// Add items to user's inventory
-			inventory, err := cardinal.GetComponent[component.OwnerShopItem](world, ownerID)
+			inventory, err := cardinal.GetComponent[comp.OwnerShopItem](world, ownerID)
 			if err != nil {
-				inventory = &component.OwnerShopItem{
+				inventory = &comp.OwnerShopItem{
 					Owner: purchase.Msg.Owner,
-					Items: []component.ShopItem{},
+					Items: []comp.ShopItem{},
 				}
 			}
 
 			// Add purchased items
 			for i := uint32(0); i < purchase.Msg.Amount; i++ {
-				inventory.Items = append(inventory.Items, item)
+				inventory.Items = append(inventory.Items, newItem)
 			}
 
 			if err := cardinal.SetComponent(world, ownerID, inventory); err != nil {
@@ -93,6 +78,7 @@ func PurchaseItemSystem(world cardinal.WorldContext) error {
 			return msg.PurchaseItemResult{
 				Success: true,
 				Balance: uint64(owner.Balance),
+				Item:    newItem,
 			}, nil
 		})
 }
@@ -103,6 +89,7 @@ func ConsumeItemSystem(world cardinal.WorldContext) error {
 		func(consume cardinal.TxData[msg.ConsumeItemMsg]) (msg.ConsumeItemResult, error) {
 			// Get user's owner component
 			var ownerID types.EntityID
+			var consumedItem comp.ShopItem
 
 			err := cardinal.NewSearch().Entity(
 				filter.Exact(filter.Component[comp.Owner]())).
@@ -120,17 +107,19 @@ func ConsumeItemSystem(world cardinal.WorldContext) error {
 			if err != nil {
 				return msg.ConsumeItemResult{Success: false}, err
 			}
+
 			// Get user's inventory
-			inventory, err := cardinal.GetComponent[component.OwnerShopItem](world, ownerID)
+			inventory, err := cardinal.GetComponent[comp.OwnerShopItem](world, ownerID)
 			if err != nil {
 				return msg.ConsumeItemResult{Success: false}, err
 			}
 
-			// Count available items
+			// Count available items and store item details
 			itemCount := uint32(0)
 			for _, item := range inventory.Items {
-				if item.Title == consume.Msg.ItemID {
+				if item.Title == consume.Msg.Title && item.Type == consume.Msg.Type {
 					itemCount++
+					consumedItem = item // Store item details for response
 				}
 			}
 
@@ -139,20 +128,24 @@ func ConsumeItemSystem(world cardinal.WorldContext) error {
 				return msg.ConsumeItemResult{
 					Success:  false,
 					Quantity: itemCount,
+					Item:     consumedItem,
 				}, nil
 			}
 
 			// Remove consumed items
-			newItems := []component.ShopItem{}
+			newItems := []comp.ShopItem{}
 			remainingToRemove := consume.Msg.Amount
 			for _, item := range inventory.Items {
-				if item.Title == consume.Msg.ItemID && remainingToRemove > 0 {
+				if item.Title == consume.Msg.Title &&
+					item.Type == consume.Msg.Type &&
+					remainingToRemove > 0 {
 					remainingToRemove--
 					continue
 				}
 				newItems = append(newItems, item)
 			}
 
+			// Update inventory
 			inventory.Items = newItems
 			if err := cardinal.SetComponent(world, ownerID, inventory); err != nil {
 				return msg.ConsumeItemResult{Success: false}, err
@@ -161,6 +154,7 @@ func ConsumeItemSystem(world cardinal.WorldContext) error {
 			return msg.ConsumeItemResult{
 				Success:  true,
 				Quantity: itemCount - consume.Msg.Amount,
+				Item:     consumedItem,
 			}, nil
 		})
 }

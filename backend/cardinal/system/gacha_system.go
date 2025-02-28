@@ -113,8 +113,9 @@ func GachaSpawnerSystem(world cardinal.WorldContext) error {
 					Age:       0,
 				},
 				Evolution: comp.Evolution{
-					Stage:      1,
-					Experience: 0,
+					Stage:       1,
+					Experience:  0,
+					NextStageAt: 100,
 				},
 				Owner: owner,
 			}

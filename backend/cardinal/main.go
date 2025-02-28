@@ -43,6 +43,7 @@ func MustInitWorld(w *cardinal.World) {
 		cardinal.RegisterMessage[msg.CreateEggMsg, msg.CreateEggResult](w, "createegg"),
 		cardinal.RegisterMessage[msg.PurchaseItemMsg, msg.PurchaseItemResult](w, "purchaseitem"),
 		cardinal.RegisterMessage[msg.ConsumeItemMsg, msg.ConsumeItemResult](w, "consumeitem"),
+		cardinal.RegisterMessage[msg.UpdateBalanceMsg, msg.UpdateBalanceResult](w, "updatebalance"),
 	)
 
 	// Register queries
@@ -63,6 +64,7 @@ func MustInitWorld(w *cardinal.World) {
 		system.PetCareSystem,
 		system.ConsumeItemSystem,
 		system.PurchaseItemSystem,
+		system.BalanceSystem,
 	))
 
 	// Must(cardinal.RegisterInitSystems(w,

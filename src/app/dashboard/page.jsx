@@ -121,6 +121,16 @@ export default function Page() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+  // Function to redirect users to Uniswap
+  const handleUniswapSwap = () => {
+    const baseUrl = "https://app.uniswap.org/#/swap";
+    const tokenFrom = "USDC"; // Default swap from USDC
+    const tokenTo = ""; // Users will select manually
+
+    const swapUrl = `${baseUrl}?inputCurrency=${tokenFrom}&outputCurrency=${tokenTo}`;
+    window.open(swapUrl, "_blank");
+  };
+
   return (
     <>
       {/* Wrapper */}
