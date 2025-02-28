@@ -21,9 +21,7 @@ const MetaSwapModal = ({ onClose, onSwap }) => {
       await nakama.authenticate();
       await nakama.updateBalance(Number(metaTokenAmount));
       await onSwap();
-      
       onClose();
-      window.location.reload();
     } catch (error) {
       console.error("Swap failed:", error);
       alert("Failed to swap tokens. Please try again.");
@@ -38,26 +36,6 @@ const MetaSwapModal = ({ onClose, onSwap }) => {
     setMetaTokenAmount(amount ? (amount * 15).toFixed(2) : "");
   };
 
-  const handleGetOwnerItems = async () => {
-    try {
-      await nakama.authenticate();
-
-      const owner = JSON.parse(localStorage.getItem("ownerData"));
-      if (!owner?.address) return;
-
-      const response = await nakama.getOwnerItems(owner.address);
-      if (response?.payload?.items) {
-        const items = response.payload.items;
-        const foodItems = items.filter((item) => item.type === "food");
-        const washItems = items.filter((item) => item.type === "wash");
-
-        setPurchasedFood(foodItems);
-        setPurchasedWash(washItems);
-      }
-    } catch (error) {
-      console.error("Failed to fetch owner items:", error);
-    }
-  
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
       <div className="bg-[#FDF6E3] border-[6px] border-[#D4B483] p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -144,7 +122,7 @@ const MetaSwapModal = ({ onClose, onSwap }) => {
       </div>
     </div>
   );
-}};
+};
 
 export default function Page() {
   const router = useRouter();
@@ -302,13 +280,21 @@ export default function Page() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-
   const [showUniswap, setShowUniswap] = useState(false);
 
   return (
     <>
+      {showUniswap && (
+        <MetaSwapModal
+          onClose={() => {
+            setShowUniswap(false);
+            refreshOwner();
+          }}
+          onSwap={handleSwapComplete}
+        />
+      )}
       {/* Wrapper */}
-      <div className="flex min-h-screen bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA]">
+      <div className="flex min-h-screen bg-gradient-to-b from-[#A8D8EA] to-[#AA96DA] z-0">
         {/* Center Container */}
         <div className="container mx-auto flex flex-col lg:flex-row items-center justify-center gap-6 px-6">
           {/* Left Column - Map */}
@@ -538,17 +524,6 @@ export default function Page() {
               />
               <span>Buy $META</span>
             </button>
-
-            {showUniswap && (
-              <MetaSwapModal
-                onClose={async () => {
-                  await nakama.authenticate();
-                  setShowUniswap(false);
-                  await getOwner();
-                }}
-                onSwap={handleSwapComplete}
-              />
-            )}
           </div>
         </div>
       </div>
